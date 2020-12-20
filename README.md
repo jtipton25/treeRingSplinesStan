@@ -1,6 +1,7 @@
  <!-- badges: start -->
   [![R-CMD-check](https://github.com/jtipton25/treeRingSplines/workflows/R-CMD-check/badge.svg)](https://github.com/jtipton25/treeRingSplines/actions)
-  <!-- badges: end -->
+  [![test-coverage](https://github.com/jtipton25/treeRingSplines/workflows/test-coverage/badge.svg)](https://github.com/jtipton25/treeRingSplines/actions)
+<!-- badges: end -->
   
   # treeRingSplines
 
