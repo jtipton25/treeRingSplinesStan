@@ -1,9 +1,9 @@
- <!-- badges: start -->
-  [![R-CMD-check](https://github.com/jtipton25/treeRingSplines/workflows/R-CMD-check/badge.svg)](https://github.com/jtipton25/treeRingSplines/actions)
-  [![test-coverage](https://github.com/jtipton25/treeRingSplines/workflows/test-coverage/badge.svg)](https://github.com/jtipton25/treeRingSplines/actions)
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/jtipton25/treeRingSplines/workflows/R-CMD-check/badge.svg)](https://github.com/jtipton25/treeRingSplines/actions)
+[![test-coverage](https://github.com/jtipton25/treeRingSplines/workflows/test-coverage/badge.svg)](https://github.com/jtipton25/treeRingSplines/actions)
 <!-- badges: end -->
   
-  # treeRingSplines
+# treeRingSplines
 
 A set of R functions for the construction of multivariate splines and associated smoothing spline penalties.
 
