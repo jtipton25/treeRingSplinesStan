@@ -18,26 +18,28 @@
 #' @return
 #' @export
 #'
-lm_splines_interaction <- function(y, X, X_bs, X_bs_interaction, n_plot, n_tree, plot_idx, tree_idx, X_pred, X_bs_pred, tree_idx_pred, ...) {
+lm_splines_interaction <- function(y, X, X_bs, X_bs_interaction, n_plot, n_tree, plot_idx, tree_idx, X_pred, X_bs_pred, X_bs_interaction_pred, tree_idx_pred, ...) {
   ## add in error checking and unit testing
 
 
   standata <- list(
-    y             = y,
-    X             = X,
-    X_bs          = X_bs,
-    p             = dim(X_bs)[1],
-    df            = dim(X_bs)[3],
-    n             = length(y),
-    K             = ncol(X),
-    n_plot        = n_plot,
-    n_tree        = n_tree,
-    plot_idx      = plot_idx,
-    tree_idx      = tree_idx,
-    n_pred        = nrow(X_pred),
-    X_pred        = X_pred,
-    X_bs_pred     = X_bs_pred,
-    tree_idx_pred = tree_idx_pred
+    y                     = y,
+    X                     = X,
+    X_bs                  = X_bs,
+    X_bs_interaction      = X_bs_interaction,
+    p                     = dim(X_bs)[1],
+    df                    = dim(X_bs)[3],
+    n                     = length(y),
+    K                     = ncol(X),
+    n_plot                = n_plot,
+    n_tree                = n_tree,
+    plot_idx              = plot_idx,
+    tree_idx              = tree_idx,
+    n_pred                = nrow(X_pred),
+    X_pred                = X_pred,
+    X_bs_pred             = X_bs_pred,
+    X_bs_interaction_pred = X_bs_interaction_pred,
+    tree_idx_pred         = tree_idx_pred
   )
 
   out <- rstan::sampling(stanmodels$splines, data = standata, ...)

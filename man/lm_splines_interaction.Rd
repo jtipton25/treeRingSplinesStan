@@ -15,6 +15,7 @@ lm_splines_interaction(
   tree_idx,
   X_pred,
   X_bs_pred,
+  X_bs_interaction_pred,
   tree_idx_pred,
   ...
 )
@@ -40,11 +41,11 @@ lm_splines_interaction(
 
 \item{X_bs_pred}{A p times n_pred times df matrix of covariate values at which to generate predictions}
 
+\item{X_bs_interaction_pred}{A n_interaction times n_pred times df^2 matrix of covariate values at which to generate predictions}
+
 \item{tree_idx_pred}{A vector of length n_pred indicating which tree the observation came from}
 
 \item{...}{Additional argument to `rstan::sampling()`}
-
-\item{X_bs_interaction_pred}{A n_interaction times n_pred times df^2 matrix of covariate values at which to generate predictions}
 }
 \value{
 
