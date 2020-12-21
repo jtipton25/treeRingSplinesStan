@@ -121,6 +121,7 @@
   <span class='va'>y</span>,
   <span class='va'>X</span>,
   <span class='va'>X_bs</span>,
+  <span class='va'>X_bs_interaction</span>,
   <span class='va'>n_plot</span>,
   <span class='va'>n_tree</span>,
   <span class='va'>plot_idx</span>,
@@ -147,6 +148,10 @@
       <td><p>A p times n times df array of covariate values bspline basis function expansions</p></td>
     </tr>
     <tr>
+      <th>X_bs_interaction</th>
+      <td><p>A p times n times df array of covariate values bspline basis function expansions</p></td>
+    </tr>
+    <tr>
       <th>n_plot</th>
       <td><p>An integer for the number of plots</p></td>
     </tr>
@@ -167,6 +172,10 @@
       <td><p>A n_pred by p matrix of covariate values at which to generate predictions</p></td>
     </tr>
     <tr>
+      <th>X_bs_pred</th>
+      <td><p>A p times n_pred times df matrix of covariate values at which to generate predictions</p></td>
+    </tr>
+    <tr>
       <th>tree_idx_pred</th>
       <td><p>A vector of length n_pred indicating which tree the observation came from</p></td>
     </tr>
@@ -175,8 +184,8 @@
       <td><p>Additional argument to `rstan::sampling()`</p></td>
     </tr>
     <tr>
-      <th>X_bs_interaction</th>
-      <td><p>A p times n times df array of covariate values bspline basis function expansions</p></td>
+      <th>X_bs_interaction_pred</th>
+      <td><p>A n_interaction times n_pred times df^2 matrix of covariate values at which to generate predictions</p></td>
     </tr>
     </table>
 
