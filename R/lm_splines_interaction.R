@@ -15,7 +15,7 @@
 #' @param tree_idx_pred A vector of length n_pred indicating which tree the observation came from
 #' @param ... Additional argument to `rstan::sampling()`
 #'
-#' @return
+#' @return A stan object that is the result of fitting the spline interaction regression model
 #' @export
 #'
 lm_splines_interaction <- function(y, X, X_bs, X_bs_interaction, n_plot, n_tree, plot_idx, tree_idx, X_pred, X_bs_pred, X_bs_interaction_pred, tree_idx_pred, ...) {

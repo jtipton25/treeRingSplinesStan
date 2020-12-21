@@ -26,7 +26,7 @@ lm_linear(y, X, n_plot, n_tree, plot_idx, tree_idx, X_pred, tree_idx_pred, ...)
 \item{...}{Additional argument to `rstan::sampling()`}
 }
 \value{
-
+A stan object that is the result of fitting the linear regression model
 }
 \description{
 lm_linear

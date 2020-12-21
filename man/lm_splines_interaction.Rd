@@ -48,7 +48,7 @@ lm_splines_interaction(
 \item{...}{Additional argument to `rstan::sampling()`}
 }
 \value{
-
+A stan object that is the result of fitting the spline interaction regression model
 }
 \description{
 lm_splines_interaction

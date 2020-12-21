@@ -42,7 +42,7 @@ lm_splines(
 \item{...}{Additional argument to `rstan::sampling()`}
 }
 \value{
-
+A stan object that is the result of fitting the spline regression model
 }
 \description{
 lm_splines
