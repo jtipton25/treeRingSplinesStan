@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Function reference • treeRingSplines</title>
+<title>lm_linear — lm_linear • treeRingSplines</title>
 
 
 <!-- jquery -->
@@ -39,7 +39,8 @@
 
 
 
-<meta property="og:title" content="Function reference" />
+<meta property="og:title" content="lm_linear — lm_linear" />
+<meta property="og:description" content="lm_linear" />
 
 
 
@@ -58,7 +59,7 @@
   </head>
 
   <body data-spy="scroll" data-target="#toc">
-    <div class="container template-reference-index">
+    <div class="container template-reference-topic">
       <header>
       <div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -105,92 +106,67 @@
       </header>
 
 <div class="row">
-  <div class="contents col-md-9">
+  <div class="col-md-9 contents">
     <div class="page-header">
-      <h1>Reference</h1>
+    <h1>lm_linear</h1>
+    <small class="dont-index">Source: <a href='https://github.com/jtipton25/treeRingSplines/blob/master/R/lm_linear.R'><code>R/lm_linear.R</code></a></small>
+    <div class="hidden name"><code>lm_linear.Rd</code></div>
     </div>
 
-    <table class="ref-index">
+    <div class="ref-description">
+    <p>lm_linear</p>
+    </div>
 
-    <colgroup>
-      
-      <col class="alias" />
-      <col class="title" />
-    </colgroup>
+    <pre class="usage"><span class='fu'>lm_linear</span><span class='op'>(</span><span class='va'>y</span>, <span class='va'>X</span>, <span class='va'>n_plot</span>, <span class='va'>n_tree</span>, <span class='va'>plot_idx</span>, <span class='va'>tree_idx</span>, <span class='va'>X_pred</span>, <span class='va'>tree_idx_pred</span>, <span class='va'>...</span><span class='op'>)</span></pre>
 
-    <tbody>
-      <tr>
-        <th colspan="2">
-          <h2 id="section-all-functions" class="hasAnchor"><a href="#section-all-functions" class="anchor"></a>All functions</h2>
-          <p class="section-desc"></p>
-        </th>
-      </tr>
-      
-      
-    </tbody><tbody>
-      
-      
-      <tr>
-        
-        <td>
-          <p><code><a href="build_spline_interactions.html">build_spline_interactions()</a></code> </p>
-        </td>
-        <td><p>Generate separable B-spline interactions with multivariate regression penalty</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="lm_linear.html">lm_linear()</a></code> </p>
-        </td>
-        <td><p>lm_linear</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="lm_splines.html">lm_splines()</a></code> </p>
-        </td>
-        <td><p>lm_splines</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="lm_splines_interaction.html">lm_splines_interaction()</a></code> </p>
-        </td>
-        <td><p>lm_splines_interaction</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="make_Q.html">make_Q()</a></code> </p>
-        </td>
-        <td><p>Generate spline penalty precision matrix</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="spline_interactions.html">spline_interactions()</a></code> </p>
-        </td>
-        <td><p>Generate separable B-spline interactions with multivariate regression penalty</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="spline_interactions_lattice.html">spline_interactions_lattice()</a></code> </p>
-        </td>
-        <td><p>Generate separable B-spline interactions multivariate regression penalty
-precision matrix for prior</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="spline_interactions_penalty.html">spline_interactions_penalty()</a></code> </p>
-        </td>
-        <td><p>Generate separable B-spline interactions multivariate regression penalty
-precision matrix for prior</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="treeRingSplines-package.html">treeRingSplines-package</a></code> </p>
-        </td>
-        <td><p>The 'treeRingSplines' package.</p></td>
-      </tr>
-    </tbody>
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>y</th>
+      <td><p>A vector of length n of tree ring increments on a log scale</p></td>
+    </tr>
+    <tr>
+      <th>X</th>
+      <td><p>A n times p matrix of covariate values</p></td>
+    </tr>
+    <tr>
+      <th>n_plot</th>
+      <td><p>An integer for the number of plots</p></td>
+    </tr>
+    <tr>
+      <th>n_tree</th>
+      <td><p>An integer for the number of trees</p></td>
+    </tr>
+    <tr>
+      <th>plot_idx</th>
+      <td><p>A vector of length n_tree that indicates which plot each tree was sampled from</p></td>
+    </tr>
+    <tr>
+      <th>tree_idx</th>
+      <td><p>A vector of length n indicating which tree the observation came from</p></td>
+    </tr>
+    <tr>
+      <th>X_pred</th>
+      <td><p>A n_pred by p matrix of covariate values at which to generate predictions</p></td>
+    </tr>
+    <tr>
+      <th>tree_idx_pred</th>
+      <td><p>A vector of length n_pred indicating which tree the observation came from</p></td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td><p>Additional argument to `rstan::sampling()`</p></td>
+    </tr>
     </table>
-  </div>
 
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+
+    
+
+
+
+  </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
       <h2 data-toc-skip>Contents</h2>
