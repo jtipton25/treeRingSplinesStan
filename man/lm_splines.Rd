@@ -29,6 +29,8 @@ lm_splines(
 
 \item{n_tree}{An integer for the number of trees}
 
+\item{plot_by_tree_idx}{A vector of length n_tree that indicates which plot each tree was sampled from}
+
 \item{tree_idx}{A vector of length n indicating which tree the observation came from}
 
 \item{X_pred}{A n_pred by p matrix of covariate values at which to generate predictions}
@@ -37,9 +39,7 @@ lm_splines(
 
 \item{tree_idx_pred}{A vector of length n_pred indicating which tree the observation came from}
 
-\item{...}{Additional argument to `rstan::sampling()`}
-
-\item{plot_idx}{A vector of length n_tree that indicates which plot each tree was sampled from}
+\item{...}{Additional arguments to `rstan::sampling()`}
 }
 \value{
 A stan object that is the result of fitting the spline regression model
