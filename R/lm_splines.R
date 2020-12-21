@@ -9,6 +9,7 @@
 #' @param plot_idx A vector of length n_tree that indicates which plot each tree was sampled from
 #' @param tree_idx A vector of length n indicating which tree the observation came from
 #' @param X_pred A n_pred by p matrix of covariate values at which to generate predictions
+#' @param X_bs_pred A p times n_pred times df array of covariate values bspline basis function expansions
 #' @param tree_idx_pred A vector of length n_pred indicating which tree the observation came from
 #' @param ... Additional argument to `rstan::sampling()`
 #'

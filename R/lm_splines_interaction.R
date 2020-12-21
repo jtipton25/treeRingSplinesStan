@@ -10,13 +10,15 @@
 #' @param plot_idx A vector of length n_tree that indicates which plot each tree was sampled from
 #' @param tree_idx A vector of length n indicating which tree the observation came from
 #' @param X_pred A n_pred by p matrix of covariate values at which to generate predictions
+#' @param X_bs_pred A p times n_pred times df matrix of covariate values at which to generate predictions
+#' @param X_bs_interaction_pred A n_interaction times n_pred times df^2 matrix of covariate values at which to generate predictions
 #' @param tree_idx_pred A vector of length n_pred indicating which tree the observation came from
 #' @param ... Additional argument to `rstan::sampling()`
 #'
 #' @return
 #' @export
 #'
-lm_splines_interaction <- function(y, X, X_bs, n_plot, n_tree, plot_idx, tree_idx, X_pred, X_bs_pred, tree_idx_pred, ...) {
+lm_splines_interaction <- function(y, X, X_bs, X_bs_interaction, n_plot, n_tree, plot_idx, tree_idx, X_pred, X_bs_pred, tree_idx_pred, ...) {
   ## add in error checking and unit testing
 
 

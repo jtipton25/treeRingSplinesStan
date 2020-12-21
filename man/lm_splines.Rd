@@ -35,6 +35,8 @@ lm_splines(
 
 \item{X_pred}{A n_pred by p matrix of covariate values at which to generate predictions}
 
+\item{X_bs_pred}{A p times n_pred times df array of covariate values bspline basis function expansions}
+
 \item{tree_idx_pred}{A vector of length n_pred indicating which tree the observation came from}
 
 \item{...}{Additional argument to `rstan::sampling()`}

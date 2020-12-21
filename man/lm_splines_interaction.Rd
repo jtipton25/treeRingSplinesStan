@@ -8,6 +8,7 @@ lm_splines_interaction(
   y,
   X,
   X_bs,
+  X_bs_interaction,
   n_plot,
   n_tree,
   plot_idx,
@@ -25,6 +26,8 @@ lm_splines_interaction(
 
 \item{X_bs}{A p times n times df array of covariate values bspline basis function expansions}
 
+\item{X_bs_interaction}{A p times n times df array of covariate values bspline basis function expansions}
+
 \item{n_plot}{An integer for the number of plots}
 
 \item{n_tree}{An integer for the number of trees}
@@ -35,11 +38,13 @@ lm_splines_interaction(
 
 \item{X_pred}{A n_pred by p matrix of covariate values at which to generate predictions}
 
+\item{X_bs_pred}{A p times n_pred times df matrix of covariate values at which to generate predictions}
+
 \item{tree_idx_pred}{A vector of length n_pred indicating which tree the observation came from}
 
 \item{...}{Additional argument to `rstan::sampling()`}
 
-\item{X_bs_interaction}{A p times n times df array of covariate values bspline basis function expansions}
+\item{X_bs_interaction_pred}{A n_interaction times n_pred times df^2 matrix of covariate values at which to generate predictions}
 }
 \value{
 
