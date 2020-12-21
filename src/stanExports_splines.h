@@ -49,7 +49,7 @@ private:
         vector_d y;
         int n_plot;
         int n_tree;
-        std::vector<int> plot_idx;
+        std::vector<int> plot_by_tree_idx;
         std::vector<int> tree_idx;
         int n_pred;
         matrix_d X_pred;
@@ -170,18 +170,18 @@ public:
             n_tree = vals_i__[pos__++];
             check_greater_or_equal(function__, "n_tree", n_tree, 0);
             current_statement_begin__ = 14;
-            validate_non_negative_index("plot_idx", "n_tree", n_tree);
-            context__.validate_dims("data initialization", "plot_idx", "int", context__.to_vec(n_tree));
-            plot_idx = std::vector<int>(n_tree, int(0));
-            vals_i__ = context__.vals_i("plot_idx");
+            validate_non_negative_index("plot_by_tree_idx", "n_tree", n_tree);
+            context__.validate_dims("data initialization", "plot_by_tree_idx", "int", context__.to_vec(n_tree));
+            plot_by_tree_idx = std::vector<int>(n_tree, int(0));
+            vals_i__ = context__.vals_i("plot_by_tree_idx");
             pos__ = 0;
-            size_t plot_idx_k_0_max__ = n_tree;
-            for (size_t k_0__ = 0; k_0__ < plot_idx_k_0_max__; ++k_0__) {
-                plot_idx[k_0__] = vals_i__[pos__++];
+            size_t plot_by_tree_idx_k_0_max__ = n_tree;
+            for (size_t k_0__ = 0; k_0__ < plot_by_tree_idx_k_0_max__; ++k_0__) {
+                plot_by_tree_idx[k_0__] = vals_i__[pos__++];
             }
-            size_t plot_idx_i_0_max__ = n_tree;
-            for (size_t i_0__ = 0; i_0__ < plot_idx_i_0_max__; ++i_0__) {
-                check_greater_or_equal(function__, "plot_idx[i_0__]", plot_idx[i_0__], 1);
+            size_t plot_by_tree_idx_i_0_max__ = n_tree;
+            for (size_t i_0__ = 0; i_0__ < plot_by_tree_idx_i_0_max__; ++i_0__) {
+                check_greater_or_equal(function__, "plot_by_tree_idx[i_0__]", plot_by_tree_idx[i_0__], 1);
             }
             current_statement_begin__ = 15;
             validate_non_negative_index("tree_idx", "n", n);
@@ -580,7 +580,7 @@ public:
                 current_statement_begin__ = 53;
                 stan::model::assign(beta0_t, 
                             stan::model::cons_list(stan::model::index_uni(t), stan::model::nil_index_list()), 
-                            (get_base1(beta0_p, get_base1(plot_idx, t, "plot_idx", 1), "beta0_p", 1) + (s_beta0_t * get_base1(beta0_t_tilde, t, "beta0_t_tilde", 1))), 
+                            (get_base1(beta0_p, get_base1(plot_by_tree_idx, t, "plot_by_tree_idx", 1), "beta0_p", 1) + (s_beta0_t * get_base1(beta0_t_tilde, t, "beta0_t_tilde", 1))), 
                             "assigning variable beta0_t");
             }
             current_statement_begin__ = 56;
@@ -850,7 +850,7 @@ public:
                 current_statement_begin__ = 53;
                 stan::model::assign(beta0_t, 
                             stan::model::cons_list(stan::model::index_uni(t), stan::model::nil_index_list()), 
-                            (get_base1(beta0_p, get_base1(plot_idx, t, "plot_idx", 1), "beta0_p", 1) + (s_beta0_t * get_base1(beta0_t_tilde, t, "beta0_t_tilde", 1))), 
+                            (get_base1(beta0_p, get_base1(plot_by_tree_idx, t, "plot_by_tree_idx", 1), "beta0_p", 1) + (s_beta0_t * get_base1(beta0_t_tilde, t, "beta0_t_tilde", 1))), 
                             "assigning variable beta0_t");
             }
             current_statement_begin__ = 56;
