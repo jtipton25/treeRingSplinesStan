@@ -128,6 +128,7 @@
   <span class='va'>tree_idx</span>,
   <span class='va'>X_pred</span>,
   <span class='va'>X_bs_pred</span>,
+  <span class='va'>X_bs_interaction_pred</span>,
   <span class='va'>tree_idx_pred</span>,
   <span class='va'>...</span>
 <span class='op'>)</span></pre>
@@ -176,16 +177,16 @@
       <td><p>A p times n_pred times df matrix of covariate values at which to generate predictions</p></td>
     </tr>
     <tr>
+      <th>X_bs_interaction_pred</th>
+      <td><p>A n_interaction times n_pred times df^2 matrix of covariate values at which to generate predictions</p></td>
+    </tr>
+    <tr>
       <th>tree_idx_pred</th>
       <td><p>A vector of length n_pred indicating which tree the observation came from</p></td>
     </tr>
     <tr>
       <th>...</th>
       <td><p>Additional argument to `rstan::sampling()`</p></td>
-    </tr>
-    <tr>
-      <th>X_bs_interaction_pred</th>
-      <td><p>A n_interaction times n_pred times df^2 matrix of covariate values at which to generate predictions</p></td>
     </tr>
     </table>
 
