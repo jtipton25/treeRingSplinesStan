@@ -117,7 +117,17 @@
     <p>lm_linear</p>
     </div>
 
-    <pre class="usage"><span class='fu'>lm_linear</span><span class='op'>(</span><span class='va'>y</span>, <span class='va'>X</span>, <span class='va'>n_plot</span>, <span class='va'>n_tree</span>, <span class='va'>plot_idx</span>, <span class='va'>tree_idx</span>, <span class='va'>X_pred</span>, <span class='va'>tree_idx_pred</span>, <span class='va'>...</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>lm_linear</span><span class='op'>(</span>
+  <span class='va'>y</span>,
+  <span class='va'>X</span>,
+  <span class='va'>n_plot</span>,
+  <span class='va'>n_tree</span>,
+  <span class='va'>plot_by_tree_idx</span>,
+  <span class='va'>tree_idx</span>,
+  <span class='va'>X_pred</span>,
+  <span class='va'>tree_idx_pred</span>,
+  <span class='va'>...</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -139,7 +149,7 @@
       <td><p>An integer for the number of trees</p></td>
     </tr>
     <tr>
-      <th>plot_idx</th>
+      <th>plot_by_tree_idx</th>
       <td><p>A vector of length n_tree that indicates which plot each tree was sampled from</p></td>
     </tr>
     <tr>
@@ -156,7 +166,7 @@
     </tr>
     <tr>
       <th>...</th>
-      <td><p>Additional argument to `rstan::sampling()`</p></td>
+      <td><p>Additional arguments to <code><a href='https://mc-stan.org/rstan/reference/stanmodel-method-sampling.html'>rstan::sampling()</a></code></p></td>
     </tr>
     </table>
 
