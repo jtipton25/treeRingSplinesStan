@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>lm_splines — lm_splines • treeRingSplines</title>
+<title>Build the non-linear response from the basis functions and paramters — build_spline_effects • treeRingSplines</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="lm_splines — lm_splines" />
-<meta property="og:description" content="lm_splines" />
+<meta property="og:title" content="Build the non-linear response from the basis functions and paramters — build_spline_effects" />
+<meta property="og:description" content="Build the non-linear response from the basis functions and paramters" />
 
 
 
@@ -108,81 +108,33 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>lm_splines</h1>
-    <small class="dont-index">Source: <a href='https://github.com/jtipton25/treeRingSplines/blob/master/R/lm_splines.R'><code>R/lm_splines.R</code></a></small>
-    <div class="hidden name"><code>lm_splines.Rd</code></div>
+    <h1>Build the non-linear response from the basis functions and paramters</h1>
+    <small class="dont-index">Source: <a href='https://github.com/jtipton25/treeRingSplines/blob/master/R/build_spline_effects.R'><code>R/build_spline_effects.R</code></a></small>
+    <div class="hidden name"><code>build_spline_effects.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>lm_splines</p>
+    <p>Build the non-linear response from the basis functions and paramters</p>
     </div>
 
-    <pre class="usage"><span class='fu'>lm_splines</span><span class='op'>(</span>
-  <span class='va'>y</span>,
-  <span class='va'>X</span>,
-  <span class='va'>X_bs</span>,
-  <span class='va'>n_plot</span>,
-  <span class='va'>n_tree</span>,
-  <span class='va'>plot_by_tree_idx</span>,
-  <span class='va'>tree_idx</span>,
-  <span class='va'>X_pred</span>,
-  <span class='va'>X_bs_pred</span>,
-  <span class='va'>tree_idx_pred</span>,
-  <span class='va'>...</span>
-<span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>build_spline_effects</span><span class='op'>(</span><span class='va'>Z</span>, <span class='va'>beta</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>y</th>
-      <td><p>A vector of length n of tree ring increments on a log scale</p></td>
+      <th>Z</th>
+      <td><p>A q by n by df array of spline-expanded coefficients</p></td>
     </tr>
     <tr>
-      <th>X</th>
-      <td><p>A n times p matrix of covariate values</p></td>
-    </tr>
-    <tr>
-      <th>X_bs</th>
-      <td><p>A p times n times df array of covariate values bspline basis function expansions</p></td>
-    </tr>
-    <tr>
-      <th>n_plot</th>
-      <td><p>An integer for the number of plots</p></td>
-    </tr>
-    <tr>
-      <th>n_tree</th>
-      <td><p>An integer for the number of trees</p></td>
-    </tr>
-    <tr>
-      <th>tree_idx</th>
-      <td><p>A vector of length n indicating which tree the observation came from</p></td>
-    </tr>
-    <tr>
-      <th>X_pred</th>
-      <td><p>A n_pred by p matrix of covariate values at which to generate predictions</p></td>
-    </tr>
-    <tr>
-      <th>X_bs_pred</th>
-      <td><p>A p times n_pred times df array of covariate values bspline basis function expansions</p></td>
-    </tr>
-    <tr>
-      <th>tree_idx_pred</th>
-      <td><p>A vector of length n_pred indicating which tree the observation came from</p></td>
-    </tr>
-    <tr>
-      <th>...</th>
-      <td><p>Additional argument to `rstan::sampling()`</p></td>
-    </tr>
-    <tr>
-      <th>plot_idx</th>
-      <td><p>A vector of length n_tree that indicates which plot each tree was sampled from</p></td>
+      <th>beta</th>
+      <td><p>A q by df matrix of spline coefficieints</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A stan object that is the result of fitting the spline regression model</p>
+    <p>A n by q matrix of effects (non-linear functional response)</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

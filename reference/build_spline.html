@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>lm_splines — lm_splines • treeRingSplines</title>
+<title>Generate univariate B-spline expansions — build_spline • treeRingSplines</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="lm_splines — lm_splines" />
-<meta property="og:description" content="lm_splines" />
+<meta property="og:title" content="Generate univariate B-spline expansions — build_spline" />
+<meta property="og:description" content="Generate univariate B-spline expansions" />
 
 
 
@@ -108,82 +108,47 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>lm_splines</h1>
-    <small class="dont-index">Source: <a href='https://github.com/jtipton25/treeRingSplines/blob/master/R/lm_splines.R'><code>R/lm_splines.R</code></a></small>
-    <div class="hidden name"><code>lm_splines.Rd</code></div>
+    <h1>Generate univariate B-spline expansions</h1>
+    <small class="dont-index">Source: <a href='https://github.com/jtipton25/treeRingSplines/blob/master/R/build_spline.R'><code>R/build_spline.R</code></a></small>
+    <div class="hidden name"><code>build_spline.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>lm_splines</p>
+    <p>Generate univariate B-spline expansions</p>
     </div>
 
-    <pre class="usage"><span class='fu'>lm_splines</span><span class='op'>(</span>
-  <span class='va'>y</span>,
-  <span class='va'>X</span>,
-  <span class='va'>X_bs</span>,
-  <span class='va'>n_plot</span>,
-  <span class='va'>n_tree</span>,
-  <span class='va'>plot_by_tree_idx</span>,
-  <span class='va'>tree_idx</span>,
-  <span class='va'>X_pred</span>,
-  <span class='va'>X_bs_pred</span>,
-  <span class='va'>tree_idx_pred</span>,
-  <span class='va'>...</span>
-<span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>build_spline</span><span class='op'>(</span><span class='va'>X</span>, <span class='va'>df</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>y</th>
-      <td><p>A vector of length n of tree ring increments on a log scale</p></td>
-    </tr>
-    <tr>
       <th>X</th>
-      <td><p>A n times p matrix of covariate values</p></td>
+      <td><p>A $n x p$ matrix of covariates from which you want to evaluate
+all marginal spline effects.</p></td>
     </tr>
     <tr>
-      <th>X_bs</th>
-      <td><p>A p times n times df array of covariate values bspline basis function expansions</p></td>
-    </tr>
-    <tr>
-      <th>n_plot</th>
-      <td><p>An integer for the number of plots</p></td>
-    </tr>
-    <tr>
-      <th>n_tree</th>
-      <td><p>An integer for the number of trees</p></td>
-    </tr>
-    <tr>
-      <th>tree_idx</th>
-      <td><p>A vector of length n indicating which tree the observation came from</p></td>
-    </tr>
-    <tr>
-      <th>X_pred</th>
-      <td><p>A n_pred by p matrix of covariate values at which to generate predictions</p></td>
-    </tr>
-    <tr>
-      <th>X_bs_pred</th>
-      <td><p>A p times n_pred times df array of covariate values bspline basis function expansions</p></td>
-    </tr>
-    <tr>
-      <th>tree_idx_pred</th>
-      <td><p>A vector of length n_pred indicating which tree the observation came from</p></td>
-    </tr>
-    <tr>
-      <th>...</th>
-      <td><p>Additional argument to `rstan::sampling()`</p></td>
-    </tr>
-    <tr>
-      <th>plot_idx</th>
-      <td><p>A vector of length n_tree that indicates which plot each tree was sampled from</p></td>
+      <th>df</th>
+      <td><p>The degree of freedom for the basis function expansion</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A stan object that is the result of fitting the spline regression model</p>
+    <p>An array of univariate B-spline function expansions. The first dimension is
+   the number of variables $p$. The second dimension is the number
+   of observations $n$ and the third dimension is the number of knots in the
+   basis expansion $df$.</p>
 
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'>
+<span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'>splines</span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/r/base/Random.html'>set.seed</a></span><span class='op'>(</span><span class='fl'>111</span><span class='op'>)</span>
+<span class='va'>X</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/matrix.html'>matrix</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span><span class='op'>(</span><span class='fl'>40</span><span class='op'>)</span>, <span class='fl'>10</span>, <span class='fl'>4</span><span class='op'>)</span> <span class='co'>## 10 observations and 4 variables</span>
+
+<span class='va'>Z</span> <span class='op'>&lt;-</span> <span class='fu'>build_spline</span><span class='op'>(</span><span class='va'>X</span>, <span class='fl'>5</span><span class='op'>)</span>
+
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
