@@ -33,7 +33,7 @@ lm_linear(
 
 \item{tree_idx_pred}{A vector of length n_pred indicating which tree the observation came from}
 
-\item{...}{Additional arguments to `rstan::sampling()`}
+\item{...}{Additional arguments to \code{rstan::sampling()}}
 }
 \value{
 A stan object that is the result of fitting the linear regression model

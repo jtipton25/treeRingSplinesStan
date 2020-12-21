@@ -14,3 +14,4 @@ zzz.R
 
 docs
 results/*.RData
+results/*.RDS

@@ -14,9 +14,9 @@ all pairwise combinations of b-spline basis interactions.}
 }
 \value{
 An array of separable B-spline interactions. The first dimension is
-   the number of pairwise interactions (p choose 2). The second dimension is the number
-   of observations $n$ and the third dimension is the number of knots in the
-   basis expansion $df^2$.
+the number of pairwise interactions (p choose 2). The second dimension is the number
+of observations $n$ and the third dimension is the number of knots in the
+basis expansion $df^2$.
 }
 \description{
 Generate separable B-spline interactions with multivariate regression penalty

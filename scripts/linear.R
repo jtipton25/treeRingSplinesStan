@@ -154,7 +154,7 @@ data.frame(
   beta0     = c(pars$beta0_t),
   iteration = rep(1:nrow(pars$beta0_t), times = n_tree),
   tree      = factor(rep(1:n_tree, each = nrow(pars$beta0_t))),
-  plot      = factor(rep(plot_for_tree_idx, each = nrow(pars$beta0_t)))
+  plot      = factor(rep(plot_by_tree_idx, each = nrow(pars$beta0_t)))
 ) %>%
   group_by(tree, plot) %>%
   summarize(
@@ -166,7 +166,7 @@ data.frame(
     data.frame(
       truth = beta0[seq(1, length(beta0), by = n_per_tree)],
       tree  = factor(1:n_tree),
-      plot  = factor(plot_for_tree_idx)
+      plot  = factor(plot_by_tree_idx)
     )
   ) %>%
   ggplot(aes(x = truth, y = estimate)) +
@@ -179,14 +179,12 @@ data.frame(
 beta_post <- pars$beta
 dimnames(beta_post) <- list(
   iteration = 1:dim(beta_post)[1],
-  parameter = 1:dim(beta_post)[2],
-  knot      = 1:dim(beta_post)[3]
+  parameter = 1:dim(beta_post)[2]
 )
 as.data.frame.table(beta_post, responseName = "beta") %>%
   mutate(
     iteration = factor(iteration),
-    parameter = factor(parameter),
-    knot      = factor(knot)
+    parameter = factor(parameter)
   ) %>%
   group_by(parameter) %>%
   summarize(
@@ -197,15 +195,13 @@ as.data.frame.table(beta_post, responseName = "beta") %>%
   left_join(
     data.frame(
       truth     = c(beta),
-      parameter = factor(rep(1:3, times = df)),
-      knot      = factor(rep(1:df, each = 3))
+      parameter = factor(1:3)
     )
   ) %>%
-  ggplot(aes(x = truth, y = estimate, color = knot)) +
+  ggplot(aes(x = truth, y = estimate)) +
   geom_point(alpha = 0.75) +
   geom_errorbar(aes(ymin = lower_beta, ymax = upper_beta), alpha = 0.5, width = 0.0) +
   geom_abline(slope = 1, intercept = 0, color = "red") +
-  facet_wrap(~ parameter) +
   ggtitle("slope estimates")
 
 
@@ -221,64 +217,37 @@ data.frame(
 
 
 
-data.frame(
-  sigma_beta = c(pars$sigma_beta),
-  sigma_true = rep(sigma_beta, each = nrow(pars$sigma_beta)),
-  par        = factor(rep(1:length(sigma_beta), each = nrow(pars$sigma_beta)))
-) %>%
-  ggplot(aes(x = par, y = sigma_beta)) +
-  geom_violin() +
-  geom_point(alpha = 0.1, position = "jitter") +
-  geom_point(aes(x = par, y = sigma_true), color = "red")  +
-  ggtitle("spline penalty variance estimate")
-
-
 
 ## Fitted vs. estimated functional responses
 
 dat_X <- data.frame(
-  X           = c(X1, X2, X3),
-  observation = 1:length(dat$y),
+  X           = c(X),
+  observation = factor(1:length(dat$y)),
   parameter   = factor(rep(paste("var", 1:3, sep="-"), each = length(dat$y)))
 )
-
-# dat_data <- data.frame(
-#   y = dat$y,
-#
-# )
-
-effects <- array(
-  0,
-  dim      = c(nrow(pars$beta), length(y), 3),
-  dimnames = list(
-    iteration   = 1:nrow(pars$beta),
-    observation = 1:length(y),
-    parameter   = paste("var", 1:3, sep="-")
-  )
+effects <- array(0, dim = c(ncol(X), nrow(X), nrow(pars$beta)),
+                 dimnames = list(
+                   parameter   = paste("var", 1:ncol(X), sep = '-'),
+                   observation = 1:nrow(X),
+                   iteration   = 1:nrow(pars$beta)
+                 )
 )
+effects[1, , ] <- X[, 1, drop = FALSE] %*% t(pars$beta[, 1])
+effects[2, , ] <- X[, 2, drop = FALSE] %*% t(pars$beta[, 2])
+effects[3, , ] <- X[, 3, drop = FALSE] %*% t(pars$beta[, 3])
 
-for (k in 1:nrow(pars$beta)) {
-  effects[k, , 1] <- X1_bs %*% pars$beta[k, 1, ]
-  effects[k, , 2] <- X2_bs %*% pars$beta[k, 2, ]
-  effects[k, , 3] <- X3_bs %*% pars$beta[k, 3, ]
-}
-
-dat_effects <- as.data.frame.table(effects, responseName = "effect")
-dat_effects$iteration <- as.numeric(dat_effects$iteration)
-dat_effects$observation <- as.numeric(dat_effects$observation)
-dat_effects <- dat_effects %>%
+dat_effects <- as.data.frame.table(effects, responseName = "effect") %>%
+  mutate(
+    iteration = factor(iteration),
+    parameter = factor(parameter)
+  ) %>%
   left_join(dat_X)
 
 dat_truth <- data.frame(
-  effect      = c(
-    X1_bs %*% beta[1, ],
-    X2_bs %*% beta[2, ],
-    X3_bs %*% beta[3, ]
-  ),
-  X           = c(X1, X2, X3),
+  effect      = c(X[, 1] * beta[1], X[, 2] * beta[2], X[, 3] * beta[3]),
+  X           = c(X[, 1], X[, 2], X[, 3]),
   observation = 1:length(dat$y),
-  parameter   = factor(rep(paste("var", 1:3, sep="-"), each = length(dat$y)))
-
+  parameter   = factor(rep(paste("var", 1:3, sep="-"), each = n))
 )
 
 dat_effects %>%
@@ -292,38 +261,8 @@ dat_effects %>%
   geom_line() +
   geom_ribbon(aes(ymin = effect_lower, ymax = effect_upper), fill = "grey", alpha = 0.5) +
   geom_line(data = dat_truth, aes(x = X, y = effect), color = "red") +
-  facet_wrap(~ parameter, ncol = 1) +
+  facet_wrap(~ parameter, ncol = 1, scales = "free") +
   ggtitle("estimate in grey, simulated trend in red")
 
 
 
-# B-spline model with spline interactions --------------------------------------
-
-
-
-
-
-
-
-
-
-# ## make sure the igraph and Matrix packages are installed
-#
-# make_Q <- function(n, phi) {
-#   # if (n <= 2)
-#   #     stop("n must be an integer larger or equal to 2")
-#   if (phi < -1 || phi > 1)
-#     stop("phi must be between -1 and 1")
-#   W <- igraph::as_adjacency_matrix(
-#     igraph::make_lattice(
-#       length = n,
-#       dim    = 1
-#     ),
-#     sparse = TRUE
-#   )
-#   D <- Matrix::Diagonal(x = Matrix::colSums(W))
-#   Q <- D - phi * W
-#   return(Q)
-# }
-#
-# Q_beta <- sapply(1:length(df), function(i) as.matrix(make_Q(df[i], 0.9)), simplify = FALSE)

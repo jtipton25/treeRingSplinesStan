@@ -1,19 +1,19 @@
 
 data {
     // data
-    int<lower=0> K;                     // number of predictor variables
-    int<lower=0> n;                     // number of observations
-    matrix[n, K] X;                     // matrix of covariates
-    vector[n] y;                        // log tree ring increment
+    int<lower=0> K;                        // number of predictor variables
+    int<lower=0> n;                        // number of observations
+    matrix[n, K] X;                        // matrix of covariates
+    vector[n] y;                           // log tree ring increment
     // indexing
-    int<lower=0> n_plot;                // number of plots
-    int<lower=0> n_tree;                // number of trees
-    int<lower=1> plot_idx[n_tree];      // index for which plot each tree is in
-    int<lower=1> tree_idx[n];           // index for trees
+    int<lower=0> n_plot;                   // number of plots
+    int<lower=0> n_tree;                   // number of trees
+    int<lower=1> plot_by_tree_idx[n_tree]; // index for which plot each tree is in
+    int<lower=1> tree_idx[n];              // index for trees
     // posterior predictions
-    int<lower=0> n_pred;                // number of posterior predictions
-    matrix[n_pred, K] X_pred;           // covariates for posterior predictions
-    int<lower=1> tree_idx_pred[n_pred]; // index for trees for posterior predictions
+    int<lower=0> n_pred;                   // number of posterior predictions
+    matrix[n_pred, K] X_pred;              // covariates for posterior predictions
+    int<lower=1> tree_idx_pred[n_pred];    // index for trees for posterior predictions
 }
 
 parameters {
@@ -42,7 +42,7 @@ transformed parameters {
     }
 
     for(t in 1:n_tree){
-        beta0_t[t] = beta0_p[plot_idx[t]] + s_beta0_t * beta0_t_tilde[t];
+        beta0_t[t] = beta0_p[plot_by_tree_idx[t]] + s_beta0_t * beta0_t_tilde[t];
     }
 
     for(i in 1:n) {

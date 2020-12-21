@@ -14,9 +14,9 @@ all marginal spline effects.}
 }
 \value{
 An array of univariate B-spline function expansions. The first dimension is
-   the number of variables $p$. The second dimension is the number
-   of observations $n$ and the third dimension is the number of knots in the
-   basis expansion $df$.
+the number of variables $p$. The second dimension is the number
+of observations $n$ and the third dimension is the number of knots in the
+basis expansion $df$.
 }
 \description{
 Generate univariate B-spline expansions

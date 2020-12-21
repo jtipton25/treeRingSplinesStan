@@ -10,6 +10,7 @@ Description: Fitting Tree Ring Growth Models With Splines.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
+Roxygen: list(markdown = TRUE)    
 RoxygenNote: 7.1.1
 Imports: 
     igraph,
@@ -22,6 +23,10 @@ Imports:
     spam,
     splines
 Suggests: 
+    covr,
+    knitr,
+    pkgdown,
+    rmarkdown.
     testthat (>= 2.0.0)
 Config/testthat/edition: 2
 URL: https://github.com/jtipton25/treeRingSplines

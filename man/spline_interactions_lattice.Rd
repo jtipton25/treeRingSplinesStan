@@ -12,7 +12,7 @@ spline_interactions_lattice(df)
 }
 \value{
 A matrix with df^2 rows and 2 columns that indicate which basis
-    functions are used in the interaction
+functions are used in the interaction
 }
 \description{
 Generate separable B-spline interactions multivariate regression penalty
