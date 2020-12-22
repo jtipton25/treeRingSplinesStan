@@ -4,6 +4,7 @@ library(here)
 library(rstan)
 library(splines)
 library(mvnfast)
+library(bayesplot)
 if (!require(devtools)) {
   install.packages("devtools")
 }
@@ -13,7 +14,15 @@ if (!require(treeRingSplines)) {
 
 options(mc.cores = parallel::detectCores())
 
-# B-spline model --------------------------------------------------------------
+# setup directories
+
+if (!dir.exists(here::here("images")))
+  dir.create(here::here("images"))
+if (!dir.exists(here::here("images", "linear")))
+  dir.create(here::here("images", "linear"))
+
+
+# linear model --------------------------------------------------------------
 
 ## simulate some example data with non-linear predictors using the tree ring model
 
@@ -146,8 +155,68 @@ if (file.exists(here("results", "linear-example.RDS"))) {
   saveRDS(fit_grow, file = here("results" ,"linear-example.RDS"))
 }
 
-
 pars <- rstan::extract(fit_grow)
+
+
+# check sampling diagnostics
+check_hmc_diagnostics(fit_grow)
+
+# check trace plots
+p1 <- mcmc_trace(fit_grow, pars = "lp__")
+p2 <- mcmc_trace(fit_grow, pars = "mu_beta0")
+p3 <- mcmc_trace(fit_grow, regex_pars = "s_|sigma")
+p4 <- mcmc_trace(fit_grow, pars = vars(param_range("beta", 1:3)))
+if (!file.exists(here::here("images", "linear", "linear-trace-others.png"))) {
+  ggsave(
+    file = here::here("images", "linear", "linear-trace-others.png"),
+    width = 16,
+    height = 9,
+    (p1 + p2) / p3 / p4
+  )
+}
+
+
+# check trace plots for tree level intercept
+for (j in 1:5) {
+  if (!file.exists(here::here("images", "linear", paste0("linear-trace-beta0_t-", j, ".png")))) {
+    ggsave(
+      file = here::here("images", "linear", paste0("linear-trace-beta0_t-", j, ".png")),
+      width = 16,
+      height = 9,
+      mcmc_trace(fit_grow,
+                 pars = vars(param_range("beta0_t", ((j-1) * 40 + 1):(40 + (j-1) * 40))),
+                 facet_args = list(ncol = 4, nrow = 10)) +
+        theme_bw(base_size = 14)
+    )
+  }
+}
+
+# check trace plots plot level intercepts
+if (!file.exists(here::here("images", "linear", "linear-trace-beta0_p.png"))) {
+  ggsave(
+    file = here::here("images", "linear", "linear-trace-beta0_p.png"),
+    width = 16,
+    height = 9,
+    mcmc_trace(fit_grow,
+               pars = vars(param_range("beta0_p", 1:20)),
+               facet_args = list(ncol = 2, nrow = 10)) +
+      theme_bw(base_size = 14)
+  )
+}
+
+# check trace plots plot level intercepts
+if (!file.exists(here::here("images", "linear", "linear-trace-beta0_p.png"))) {
+  ggsave(
+    file = here::here("images", "linear", "linear-trace-beta0_p.png"),
+    width = 16,
+    height = 9,
+    mcmc_trace(fit_grow,
+               pars = vars(param_range("beta0_p", 1:20)),
+               facet_args = list(ncol = 2, nrow = 10)) +
+      theme_bw(base_size = 14)
+  )
+}
+
 
 ## plot the estimated vs. fitted intercepts
 data.frame(
@@ -220,49 +289,109 @@ data.frame(
 
 ## Fitted vs. estimated functional responses
 
-dat_X <- data.frame(
-  X           = c(X),
-  observation = factor(1:length(dat$y)),
-  parameter   = factor(rep(paste("var", 1:3, sep="-"), each = length(dat$y)))
-)
-effects <- array(0, dim = c(ncol(X), nrow(X), nrow(pars$beta)),
-                 dimnames = list(
-                   parameter   = paste("var", 1:ncol(X), sep = '-'),
-                   observation = 1:nrow(X),
-                   iteration   = 1:nrow(pars$beta)
-                 )
-)
-effects[1, , ] <- X[, 1, drop = FALSE] %*% t(pars$beta[, 1])
-effects[2, , ] <- X[, 2, drop = FALSE] %*% t(pars$beta[, 2])
-effects[3, , ] <- X[, 3, drop = FALSE] %*% t(pars$beta[, 3])
 
-dat_effects <- as.data.frame.table(effects, responseName = "effect") %>%
-  mutate(
-    iteration = factor(iteration),
-    parameter = factor(parameter)
-  ) %>%
-  left_join(dat_X)
+if (!file.exists(here::here("images", "linear", "linear-effects.png"))) {
 
-dat_truth <- data.frame(
-  effect      = c(X[, 1] * beta[1], X[, 2] * beta[2], X[, 3] * beta[3]),
-  X           = c(X[, 1], X[, 2], X[, 3]),
-  observation = 1:length(dat$y),
-  parameter   = factor(rep(paste("var", 1:3, sep="-"), each = n))
-)
+  dat_X <- data.frame(
+    X           = c(X),
+    observation = factor(1:length(dat$y)),
+    parameter   = factor(rep(paste("var", 1:3, sep="-"), each = length(dat$y)))
+  )
+  effects <- array(0, dim = c(ncol(X), nrow(X), nrow(pars$beta)),
+                   dimnames = list(
+                     parameter   = paste("var", 1:ncol(X), sep = '-'),
+                     observation = 1:nrow(X),
+                     iteration   = 1:nrow(pars$beta)
+                   )
+  )
+  effects[1, , ] <- X[, 1, drop = FALSE] %*% t(pars$beta[, 1])
+  effects[2, , ] <- X[, 2, drop = FALSE] %*% t(pars$beta[, 2])
+  effects[3, , ] <- X[, 3, drop = FALSE] %*% t(pars$beta[, 3])
 
-dat_effects %>%
-  group_by(observation, parameter, X) %>%
-  summarize(
-    effect_mean = mean(effect),
-    effect_lower = quantile(effect, prob = 0.025),
-    effect_upper = quantile(effect, prob = 0.975)
-  ) %>%
-  ggplot(aes(x = X, y = effect_mean)) +
-  geom_line() +
-  geom_ribbon(aes(ymin = effect_lower, ymax = effect_upper), fill = "grey", alpha = 0.5) +
-  geom_line(data = dat_truth, aes(x = X, y = effect), color = "red") +
-  facet_wrap(~ parameter, ncol = 1, scales = "free") +
-  ggtitle("estimate in grey, simulated trend in red")
+  dat_effects <- as.data.frame.table(effects, responseName = "effect") %>%
+    mutate(
+      iteration = factor(iteration),
+      parameter = factor(parameter)
+    ) %>%
+    left_join(dat_X)
 
+  dat_truth <- data.frame(
+    effect      = c(X[, 1] * beta[1], X[, 2] * beta[2], X[, 3] * beta[3]),
+    X           = c(X[, 1], X[, 2], X[, 3]),
+    observation = 1:length(dat$y),
+    parameter   = factor(rep(paste("var", 1:3, sep="-"), each = n))
+  )
+
+
+  p1 <- dat_effects %>%
+    group_by(observation, parameter, X) %>%
+    summarize(
+      effect_mean = mean(effect),
+      effect_lower = quantile(effect, prob = 0.025),
+      effect_upper = quantile(effect, prob = 0.975)
+    ) %>%
+    ggplot(aes(x = X, y = effect_mean)) +
+    geom_line() +
+    geom_ribbon(aes(ymin = effect_lower, ymax = effect_upper), fill = "grey", alpha = 0.5) +
+    geom_line(data = dat_truth, aes(x = X, y = effect), color = "red") +
+    facet_wrap(~ parameter, ncol = 1, scales = "free") +
+    ggtitle("estimate in grey, simulated trend in red")
+
+  ggsave(
+    file = here::here("images", "linear", "linear-effects.png"),
+    width = 16,
+    height = 9,
+    p1 + theme_bw(base_size = 14)
+  )
+}
+
+# Posterior predictive distributions
+
+if (!file.exists(here::here("images", "linear", "linear-ppc.png"))) {
+  p1 <- ppc_dens_overlay(y, pars$y_rep)
+  p2 <- ppc_ecdf_overlay(y, pars$y_rep[sample(nrow(pars$y_rep), 250), ])
+
+  ggsave(
+    file = here::here("images", "linear", "linear-ppc.png"),
+    width = 16,
+    height = 9,
+    (p1 + theme_bw(base_size = 14)) / (p2 + theme_bw(base_size = 14))
+  )
+}
+
+
+# explore posterior mean of residuals as a function of covariates
+if (!file.exists(here::here("images", "linear", "linear-ppc-by-covariate.png"))) {
+  p1 <- ppc_error_scatter_avg_vs_x(y, pars$y_rep, X[, 1], alpha = 0.1) +
+    geom_hline(yintercept = 0, color = "red", lty = 2) +
+    theme_bw(base_size = 14)
+  p2 <- ppc_error_scatter_avg_vs_x(y, pars$y_rep, X[, 2], alpha = 0.1) +
+    geom_hline(yintercept = 0, color = "red", lty = 2) +
+    theme_bw(base_size = 14)
+  p3 <- ppc_error_scatter_avg_vs_x(y, pars$y_rep, X[, 3], alpha = 0.1) +
+    geom_hline(yintercept = 0, color = "red", lty = 2) +
+    theme_bw(base_size = 14)
+
+  ggsave(
+    file = here::here("images", "linear", "linear-ppc-by-covariate.png"),
+    width = 16,
+    height = 9,
+    p1 / p2 / p3
+  )
+}
+
+
+## LOO
+loo_linear <- loo(fit_grow, save_psis = TRUE, cores = 2)
+psis_linear <- loo_linear$psis_object
+lw <- weights(psis_linear)
+
+# marginal predictive check using LOO probability integral transform
+ppc_loo_pit_overlay(y, pars$y_rep, lw = lw)
+ppc_loo_pit_qq(y, pars$y_rep, lw = lw)
+
+# loo predictive intervals vs observations
+keep_obs <- sample(length(y), 100)
+ppc_loo_intervals(y, pars$y_rep, psis_object = psis_linear, subset = keep_obs, order = "median")
 
 

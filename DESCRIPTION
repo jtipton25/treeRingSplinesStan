@@ -5,7 +5,6 @@ Version: 1.0.0
 Date: 2020-12-20
 Authors@R: person("John", "Tipton", email = "jrtipton@uark.edu", 
     role = c("aut", "cre"))
-Maintainer: John Tipton <jtipton25@gmail.com>
 Description: Fitting Tree Ring Growth Models With Splines.
 License: MIT + file LICENSE
 Encoding: UTF-8
