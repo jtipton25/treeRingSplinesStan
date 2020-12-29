@@ -19,8 +19,8 @@ options(mc.cores = parallel::detectCores())
 
 if (!dir.exists(here::here("images")))
   dir.create(here::here("images"))
-if (!dir.exists(here::here("images", "spline-interaction")))
-  dir.create(here::here("images", "spline-interaction"))
+if (!dir.exists(here::here("images", "spline-interaction-sparse")))
+  dir.create(here::here("images", "spline-interaction-sparse"))
 
 
 # B-spline model with interactions ---------------------------------------------
@@ -294,20 +294,19 @@ X_bs_pred <- X_bs
 X_bs_int_pred <- X_bs_int
 tree_idx_pred <- tree_idx
 
-## spline interaction smoothness penalty (2D)
-## this is set at phi = 0.99 for simulation, for fitting in stan, we set phi = 1
-Q <- make_Q(df, phi = 0.99, prec_model = "CAR")
+## spline interaction smoothness penalty adjacency (2D)
+W <- make_W(df)
 
 ## Needs to fit with more samples
-if (file.exists(here("results", "spline-interaction-example.RDS"))) {
-  fit_grow <- readRDS(here("results", "spline-interaction-example.RDS"))
+if (file.exists(here("results", "spline-interaction-sparse-example.RDS"))) {
+  fit_grow <- readRDS(here("results", "spline-interaction-sparse-example.RDS"))
 } else {
-  fit_grow <- lm_splines_interaction(
+  fit_grow <- lm_splines_interaction_sparse(
     y                = y,
     X                = as.matrix(X),
     X_bs             = X_bs,
     X_bs_int         = X_bs_int,
-    Q                = Q,
+    W                = W,
     n_plot           = n_plot,
     n_tree           = n_tree,
     plot_by_tree_idx = plot_by_tree_idx,
@@ -322,7 +321,7 @@ if (file.exists(here("results", "spline-interaction-example.RDS"))) {
     control = list(max_treedepth = 15, adapt_delta = 0.99)
   )
 
-  saveRDS(fit_grow, file = here("results" ,"spline-interaction-example.RDS"))
+  saveRDS(fit_grow, file = here("results" ,"spline-interaction-sparse-example.RDS"))
 }
 
 
@@ -345,9 +344,9 @@ mcmc_pairs(
   pars = c("lp__", "sigma_beta[1]", "sigma_beta[2]", "sigma_beta[3]")
 )
 
-if (!file.exists(here::here("images", "spline-interaction", "spline-trace-others.png"))) {
+if (!file.exists(here::here("images", "spline-interaction-sparse", "spline-trace-others.png"))) {
   ggsave(
-    file = here::here("images", "spline-interaction", "spline-trace-others.png"),
+    file = here::here("images", "spline-interaction-sparse", "spline-trace-others.png"),
     width = 16,
     height = 9,
     (p1 + p2 + p3) / p4
@@ -357,9 +356,9 @@ if (!file.exists(here::here("images", "spline-interaction", "spline-trace-others
 
 # check trace plots for tree level intercept
 for (j in 1:5) {
-  if (!file.exists(here::here("images", "spline-interaction", paste0("spline-trace-beta0_t-", j, ".png")))) {
+  if (!file.exists(here::here("images", "spline-interaction-sparse", paste0("spline-trace-beta0_t-", j, ".png")))) {
     ggsave(
-      file = here::here("images", "spline-interaction", paste0("spline-trace-beta0_t-", j, ".png")),
+      file = here::here("images", "spline-interaction-sparse", paste0("spline-trace-beta0_t-", j, ".png")),
       width = 16,
       height = 9,
       mcmc_trace(fit_grow,
@@ -371,9 +370,9 @@ for (j in 1:5) {
 }
 
 # check trace plots plot level intercepts
-if (!file.exists(here::here("images", "spline-interaction", "spline-trace-beta0_p.png"))) {
+if (!file.exists(here::here("images", "spline-interaction-sparse", "spline-trace-beta0_p.png"))) {
   ggsave(
-    file = here::here("images", "spline-interaction", "spline-trace-beta0_p.png"),
+    file = here::here("images", "spline-interaction-sparse", "spline-trace-beta0_p.png"),
     width = 16,
     height = 9,
     mcmc_trace(fit_grow,
@@ -385,7 +384,7 @@ if (!file.exists(here::here("images", "spline-interaction", "spline-trace-beta0_
 
 
 # check trace plots plot level intercepts
-if (!file.exists(here::here("images", "spline-interaction", "spline-trace-betas.png"))) {
+if (!file.exists(here::here("images", "spline-interaction-sparse", "spline-trace-betas.png"))) {
   p1 <- mcmc_trace(fit_grow, pars = "beta[1]") + #vars(param_range("beta", 1))) +
     theme_bw(base_size = 14)
   p2 <- mcmc_trace(fit_grow, pars = vars(param_glue("beta_bs[{level1},{level2}]",
@@ -394,7 +393,7 @@ if (!file.exists(here::here("images", "spline-interaction", "spline-trace-betas.
     theme_bw(base_size = 14)
 
   ggsave(
-    file = here::here("images", "spline-interaction", "spline-trace-betas.png"),
+    file = here::here("images", "spline-interaction-sparse", "spline-trace-betas.png"),
     width = 16,
     height = 9,
     p1 / p2 + plot_layout(heights = c(1, 4))
@@ -544,9 +543,9 @@ dat_truth <- data.frame(
 )
 
 
-if (!file.exists(here::here("images", "spline-interaction", "spline-effects.png"))) {
+if (!file.exists(here::here("images", "spline-interaction-sparse", "spline-effects.png"))) {
   ggsave(
-    file = here::here("images", "spline-interaction", "spline-effects.png"),
+    file = here::here("images", "spline-interaction-sparse", "spline-effects.png"),
     width = 16,
     height = 9,
     dat_effects %>%

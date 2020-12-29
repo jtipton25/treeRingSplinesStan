@@ -10,11 +10,13 @@ using namespace Rcpp;
 RcppExport SEXP _rcpp_module_boot_stan_fit4linear_mod();
 RcppExport SEXP _rcpp_module_boot_stan_fit4splines_mod();
 RcppExport SEXP _rcpp_module_boot_stan_fit4splines_interaction_mod();
+RcppExport SEXP _rcpp_module_boot_stan_fit4splines_interaction_sparse_mod();
 
 static const R_CallMethodDef CallEntries[] = {
     {"_rcpp_module_boot_stan_fit4linear_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4linear_mod, 0},
     {"_rcpp_module_boot_stan_fit4splines_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4splines_mod, 0},
     {"_rcpp_module_boot_stan_fit4splines_interaction_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4splines_interaction_mod, 0},
+    {"_rcpp_module_boot_stan_fit4splines_interaction_sparse_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4splines_interaction_sparse_mod, 0},
     {NULL, NULL, 0}
 };
 
