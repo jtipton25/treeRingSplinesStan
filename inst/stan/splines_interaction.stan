@@ -15,7 +15,7 @@ data {
   // indexing
   int<lower=0> n_plot;                     // number of plots
   int<lower=0> n_tree;                     // number of trees
-  int<lower=1> plot_idx[n_tree];           // index for which plot each tree is in
+  int<lower=1> plot_by_tree_idx[n_tree];   // index for which plot each tree is in
   int<lower=1> tree_idx[n];                // index for trees
   // posterior predictions
   int<lower=0> n_pred;                     // number of posterior predictions
@@ -65,7 +65,7 @@ transformed parameters {
   }
 
   for(t in 1:n_tree){
-    beta0_t[t] = beta0_p[plot_idx[t]] + s_beta0_t * beta0_t_tilde[t];
+    beta0_t[t] = beta0_p[plot_by_tree_idx[t]] + s_beta0_t * beta0_t_tilde[t];
   }
 
   for(i in 1:n) {

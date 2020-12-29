@@ -395,3 +395,5 @@ keep_obs <- sample(length(y), 100)
 ppc_loo_intervals(y, pars$y_rep, psis_object = psis_linear, subset = keep_obs, order = "median")
 
 
+plot(loo_linear, main = "PSIS diagnostic plot linear")
+

@@ -5,6 +5,7 @@ library(rstan)
 library(splines)
 library(mvnfast)
 library(bayesplot)
+library(mvnfast)
 if (!require(devtools)) {
   install.packages("devtools")
 }
@@ -18,11 +19,11 @@ options(mc.cores = parallel::detectCores())
 
 if (!dir.exists(here::here("images")))
   dir.create(here::here("images"))
-if (!dir.exists(here::here("images", "spline")))
-  dir.create(here::here("images", "spline"))
+if (!dir.exists(here::here("images", "spline-interaction")))
+  dir.create(here::here("images", "spline-interaction"))
 
 
-# B-spline model --------------------------------------------------------------
+# B-spline model with interactions ---------------------------------------------
 
 ## simulate some example data with non-linear predictors using the tree ring model
 
@@ -87,11 +88,15 @@ sigma_beta_bs <- c(0.5, 0.01, 0.1)
 
 ## figure out how to do this more programmatically (loop/function)
 beta_bs <- matrix(0, 3, df)
-beta_bs[, 1] <- rnorm(3, 0, sigma_beta_bs)
+for (j in 1:3) {
+  beta_bs[j, 1] <- rnorm(1, 0, sigma_beta_bs[j])
+}
 
 ## Autoregressive prior on beta's to induce smoothing
 for (i in 2:df) {
-  beta_bs[, i] <- rnorm(3, beta_bs[, i-1], sigma_beta_bs)
+  for (j in 1:3) {
+    beta_bs[j, i] <- rnorm(1, beta_bs[, i-1], sigma_beta_bs[j])
+  }
 }
 
 ## plot the basis functions
@@ -115,7 +120,7 @@ data.frame(
   ggtitle("Simulated betas")
 
 
-# plot the simulated spline effects
+# plot the marginal simulated spline effects
 data.frame(
   effect = c(build_spline_effects(X_bs, beta_bs)),
   par        = factor(rep(1:3, each = n)),
@@ -125,11 +130,25 @@ data.frame(
   geom_line() +
   facet_wrap(~ par)
 
+## Build the spline interactions
+X_bs_int  <- build_spline_interactions(Z, df)
+## spline interaction smoothness penalty (2D)
+## this is set at phi = 0.99 for simulation, for fitting in stan, we set phi = 1
+Q <- make_Q(df, phi = 0.99, prec_model = "CAR")
+
+
+beta_bs_int <- matrix(0, nrow(X_bs_int), df^2)
+sigma_beta_bs_int <- c(0.05, 0.01, 0.025)
+for (j in 1:nrow(X_bs_int)) {
+  beta_bs_int[j, ] <- drop(rmvn(1, rep(0, df^2), sigma_beta_bs_int[j] * solve(Q)))
+}
+
+
 
 
 sigma <- 0.1
 ## the drop() makes y into a vector
-y <- drop(beta0 + as.matrix(X) %*% beta + rowSums(build_spline_effects(X_bs, beta_bs)) + rnorm(n, 0, sigma))
+y <- drop(beta0 + as.matrix(X) %*% beta + rowSums(build_spline_effects(X_bs, beta_bs)) + rowSums(build_spline_effects(X_bs_int, beta_bs_int)) + rnorm(n, 0, sigma))
 
 
 
@@ -177,29 +196,125 @@ p4 <- dat %>%
 
 (p1 + p2) / (p3 + p4)
 
+## Plot the marginal and interaction effects
+
+n_grid <- 40
+Z_grid <- expand.grid(
+  seq(min(Z[, 1]), max(Z[, 1]), length.out = n_grid),
+  seq(min(Z[, 2]), max(Z[, 2]), length.out = n_grid),
+  seq(min(Z[, 3]), max(Z[, 3]), length.out = n_grid)
+)
+Z_bs_grid <- build_spline(as.matrix(Z_grid), df)
+effects_grid <- build_spline_effects(Z_bs_grid, beta_bs)
+
+Z_bs_int_grid <- build_spline_interactions(as.matrix(Z_grid), df)
+effects_int_grid <- build_spline_effects(Z_bs_int_grid, beta_bs_int)
+
+dat_marginal <- data.frame(
+  x1 = Z_grid[, 1],
+  x2 = Z_grid[, 2],
+  x3 = Z_grid[, 3],
+  effects1 = effects_grid[, 1],
+  effects2 = effects_grid[, 2],
+  effects3 = effects_grid[, 3]
+  )
+
+p1 <- dat_marginal %>%
+  ggplot(aes(x = x1, y = effects1)) +
+  geom_line() +
+  ggtitle("marginal effect")
+p2 <- dat_marginal %>%
+  ggplot(aes(x = x2, y = effects2)) +
+  geom_line() +
+  ggtitle("marginal effect")
+p3 <- dat_marginal %>%
+  ggplot(aes(x = x3, y = effects3)) +
+  geom_line() +
+  ggtitle("marginal effect")
+
+dat_int <- data.frame(
+  x1 = Z_grid[, 1],
+  x2 = Z_grid[, 2],
+  x3 = Z_grid[, 3],
+  effects1 = effects_int_grid[, 1],
+  effects2 = effects_int_grid[, 2],
+  effects3 = effects_int_grid[, 3]
+)
+
+p4 <- dat_int %>%
+  ggplot(aes(x = x1, y = x2, fill = effects1)) +
+  geom_raster() +
+  scale_fill_viridis_c() +
+  ggtitle("interaction")
+p5 <- dat_int %>%
+  ggplot(aes(x = x1, y = x3, fill = effects2)) +
+  geom_raster() +
+  scale_fill_viridis_c() +
+  ggtitle("interaction")
+p6 <- dat_int %>%
+  ggplot(aes(x = x2, y = x3, fill = effects3)) +
+  geom_raster() +
+  scale_fill_viridis_c() +
+  ggtitle("interaction")
+
+dat_full <- data.frame(
+  x1 = Z_grid[, 1],
+  x2 = Z_grid[, 2],
+  x3 = Z_grid[, 3],
+  effects1 = effects_grid[, 1] + effects_grid[, 2] + effects_int_grid[, 1],
+  effects2 = effects_grid[, 1] + effects_grid[, 3] + effects_int_grid[, 2],
+  effects3 = effects_grid[, 2] + effects_grid[, 3] + effects_int_grid[, 3]
+)
+
+p7 <- dat_full %>%
+  ggplot(aes(x = x1, y = x2, fill = effects1)) +
+  geom_raster() +
+  scale_fill_viridis_c() +
+  ggtitle("full effect")
+p8 <- dat_full %>%
+  ggplot(aes(x = x1, y = x3, fill = effects2)) +
+  geom_raster() +
+  scale_fill_viridis_c() +
+  ggtitle("full effect")
+p9 <- dat_full %>%
+  ggplot(aes(x = x2, y = x3, fill = effects3)) +
+  geom_raster() +
+  scale_fill_viridis_c() +
+  ggtitle("full effect")
+
+(p1 + p2 + p3) / (p4 + p5 + p6) / (p7 + p8 + p9)
+
 ##----------------------------------------------------------------------------##
-## Fit the b-spline model in stan
+## Fit the b-spline model with interactions in stan
 ##----------------------------------------------------------------------------##
 
 ## for now, predict at the observed sites only
 X_pred <- X
 X_bs_pred <- X_bs
+X_bs_int_pred <- X_bs_int
 tree_idx_pred <- tree_idx
 
+## spline interaction smoothness penalty (2D)
+## this is set at phi = 0.99 for simulation, for fitting in stan, we set phi = 1
+Q <- make_Q(df, phi = 0.99, prec_model = "CAR")
+
 ## Needs to fit with more samples
-if (file.exists(here("results", "spline-example.RDS"))) {
-  fit_grow <- readRDS(here("results", "spline-example.RDS"))
+if (file.exists(here("results", "spline-interaction-example.RDS"))) {
+  fit_grow <- readRDS(here("results", "spline-interaction-example.RDS"))
 } else {
-  fit_grow <- lm_splines(
+  fit_grow <- lm_splines_interaction(
     y                = y,
     X                = as.matrix(X),
     X_bs             = X_bs,
+    X_bs_int         = X_bs_int,
+    Q                = Q,
     n_plot           = n_plot,
     n_tree           = n_tree,
     plot_by_tree_idx = plot_by_tree_idx,
     tree_idx         = tree_idx,
     X_pred           = as.matrix(X_pred),
     X_bs_pred        = X_bs_pred,
+    X_bs_int_pred    = X_bs_int_pred,
     tree_idx_pred    = tree_idx_pred,
     iter = 2000,
     warmup = 1000,
@@ -207,7 +322,7 @@ if (file.exists(here("results", "spline-example.RDS"))) {
     control = list(max_treedepth = 15, adapt_delta = 0.99)
   )
 
-  saveRDS(fit_grow, file = here("results" ,"spline-example.RDS"))
+  saveRDS(fit_grow, file = here("results" ,"spline-interaction-example.RDS"))
 }
 
 
