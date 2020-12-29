@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>lm_splines_interaction — lm_splines_interaction • treeRingSplines</title>
+<title>lm_splines_interaction_sparse — lm_splines_interaction_sparse • treeRingSplines</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="lm_splines_interaction — lm_splines_interaction" />
-<meta property="og:description" content="lm_splines_interaction" />
+<meta property="og:title" content="lm_splines_interaction_sparse — lm_splines_interaction_sparse" />
+<meta property="og:description" content="lm_splines_interaction_sparse" />
 
 
 
@@ -108,21 +108,21 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>lm_splines_interaction</h1>
-    <small class="dont-index">Source: <a href='https://github.com/jtipton25/treeRingSplines/blob/master/R/lm_splines_interaction.R'><code>R/lm_splines_interaction.R</code></a></small>
-    <div class="hidden name"><code>lm_splines_interaction.Rd</code></div>
+    <h1>lm_splines_interaction_sparse</h1>
+    <small class="dont-index">Source: <a href='https://github.com/jtipton25/treeRingSplines/blob/master/R/lm_splines_interaction_sparse.R'><code>R/lm_splines_interaction_sparse.R</code></a></small>
+    <div class="hidden name"><code>lm_splines_interaction_sparse.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>lm_splines_interaction</p>
+    <p>lm_splines_interaction_sparse</p>
     </div>
 
-    <pre class="usage"><span class='fu'>lm_splines_interaction</span><span class='op'>(</span>
+    <pre class="usage"><span class='fu'>lm_splines_interaction_sparse</span><span class='op'>(</span>
   <span class='va'>y</span>,
   <span class='va'>X</span>,
   <span class='va'>X_bs</span>,
   <span class='va'>X_bs_int</span>,
-  <span class='va'>Q</span>,
+  <span class='va'>W</span>,
   <span class='va'>n_plot</span>,
   <span class='va'>n_tree</span>,
   <span class='va'>plot_by_tree_idx</span>,
@@ -154,8 +154,8 @@
       <td><p>A p times n times df_int array of covariate values bspline basis function expansions</p></td>
     </tr>
     <tr>
-      <th>Q</th>
-      <td><p>A df_int times df_int matrix of spline penalty parameters</p></td>
+      <th>W</th>
+      <td><p>A df_int times df_int matrix of spline penalty adjacencies</p></td>
     </tr>
     <tr>
       <th>n_plot</th>
