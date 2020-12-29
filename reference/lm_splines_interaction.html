@@ -121,14 +121,15 @@
   <span class='va'>y</span>,
   <span class='va'>X</span>,
   <span class='va'>X_bs</span>,
-  <span class='va'>X_bs_interaction</span>,
+  <span class='va'>X_bs_int</span>,
+  <span class='va'>Q</span>,
   <span class='va'>n_plot</span>,
   <span class='va'>n_tree</span>,
-  <span class='va'>plot_idx</span>,
+  <span class='va'>plot_by_tree_idx</span>,
   <span class='va'>tree_idx</span>,
   <span class='va'>X_pred</span>,
   <span class='va'>X_bs_pred</span>,
-  <span class='va'>X_bs_interaction_pred</span>,
+  <span class='va'>X_bs_int_pred</span>,
   <span class='va'>tree_idx_pred</span>,
   <span class='va'>...</span>
 <span class='op'>)</span></pre>
@@ -149,8 +150,12 @@
       <td><p>A p times n times df array of covariate values bspline basis function expansions</p></td>
     </tr>
     <tr>
-      <th>X_bs_interaction</th>
-      <td><p>A p times n times df array of covariate values bspline basis function expansions</p></td>
+      <th>X_bs_int</th>
+      <td><p>A p times n times df_int array of covariate values bspline basis function expansions</p></td>
+    </tr>
+    <tr>
+      <th>Q</th>
+      <td><p>A df_int times df_int matrix of spline penalty parameters</p></td>
     </tr>
     <tr>
       <th>n_plot</th>
@@ -159,10 +164,6 @@
     <tr>
       <th>n_tree</th>
       <td><p>An integer for the number of trees</p></td>
-    </tr>
-    <tr>
-      <th>plot_idx</th>
-      <td><p>A vector of length n_tree that indicates which plot each tree was sampled from</p></td>
     </tr>
     <tr>
       <th>tree_idx</th>
@@ -177,7 +178,7 @@
       <td><p>A p times n_pred times df matrix of covariate values at which to generate predictions</p></td>
     </tr>
     <tr>
-      <th>X_bs_interaction_pred</th>
+      <th>X_bs_int_pred</th>
       <td><p>A n_interaction times n_pred times df^2 matrix of covariate values at which to generate predictions</p></td>
     </tr>
     <tr>
@@ -187,6 +188,10 @@
     <tr>
       <th>...</th>
       <td><p>Additional argument to <code><a href='https://mc-stan.org/rstan/reference/stanmodel-method-sampling.html'>rstan::sampling()</a></code></p></td>
+    </tr>
+    <tr>
+      <th>plot_idx</th>
+      <td><p>A vector of length n_tree that indicates which plot each tree was sampled from</p></td>
     </tr>
     </table>
 
