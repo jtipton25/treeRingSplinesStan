@@ -8,8 +8,8 @@ library(bayesplot)
 if (!require(devtools)) {
   install.packages("devtools")
 }
-if (!require(treeRingSplines)) {
-  devtools::install_github("jtipton25/treeRingSplines")
+if (!require(treeRingSplinesStan)) {
+  devtools::install_github("jtipton25/treeRingSplinesStan")
 }
 
 options(mc.cores = parallel::detectCores())
@@ -71,13 +71,24 @@ beta <- rnorm(1)
 df <- 5
 
 ## a n by q matrix of coefficients for the basis expansion
+Z_plot <- rnorm(n_plot * n_per_tree)
+site_age_idx <- c(
+  rep(1:100, 10), rep(101:200, 10), rep(201:300, 10),
+  rep(301:400, 10), rep(401:500, 10), rep(501:600, 10),
+  rep(601:700, 10), rep(701:800, 10), rep(801:900, 10),
+  rep(901:1000, 10), rep(1001:1100, 10), rep(1101:1200, 10),
+  rep(1201:1300, 10), rep(1301:1400, 10), rep(1401:1500, 10),
+  rep(1501:1600, 10), rep(1601:1700, 10), rep(1701:1800, 10),
+  rep(1801:1900, 10), rep(1901:2000, 10)
+)
+
 Z <- cbind(
   # tree-specific predictor over age
   rep(seq(0, 1, length.out = n_per_tree), times = n_tree),
   # plot-level predictor (like climate normal)
   rep(rnorm(n_plot), each = n_per_tree * n_tree_per_plot),
   # plot-level predictor (like climate annual variation)
-  rep(rnorm(n_plot * n_per_tree), each = n_tree_per_plot)
+  Z_plot[site_age_idx]
 )
 
 ## build the univariate splines from a matrix of covariates

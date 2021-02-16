@@ -9,8 +9,8 @@ library(mvnfast)
 if (!require(devtools)) {
   install.packages("devtools")
 }
-if (!require(treeRingSplines)) {
-  devtools::install_github("jtipton25/treeRingSplines")
+if (!require(treeRingSplinesStan)) {
+  devtools::install_github("jtipton25/treeRingSplinesStan")
 }
 
 options(mc.cores = parallel::detectCores())

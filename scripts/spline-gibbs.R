@@ -5,12 +5,11 @@ library(rstan)
 library(splines)
 library(mvnfast)
 library(bayesplot)
-library(mvnfast)
 if (!require(devtools)) {
   install.packages("devtools")
 }
 if (!require(treeRingSplinesStan)) {
-  devtools::install_github("jtipton25/treeRingSplinesStan")
+  devtools::install_github("jtipton25/treeRingSplineStan")
 }
 
 options(mc.cores = parallel::detectCores())
@@ -19,11 +18,11 @@ options(mc.cores = parallel::detectCores())
 
 if (!dir.exists(here::here("images")))
   dir.create(here::here("images"))
-if (!dir.exists(here::here("images", "spline-interaction-sparse")))
-  dir.create(here::here("images", "spline-interaction-sparse"))
+if (!dir.exists(here::here("images", "spline-gibbs")))
+  dir.create(here::here("images", "spline-gibbs"))
 
 
-# B-spline model with interactions ---------------------------------------------
+# B-spline model --------------------------------------------------------------
 
 ## simulate some example data with non-linear predictors using the tree ring model
 
@@ -47,10 +46,15 @@ tree_idx <- rep(1:n_tree, each = n_per_tree)
 plot_by_tree_idx <- rep(1:n_plot, each = n_tree_per_plot)
 
 # intercept terms
-beta0_tree <- rnorm(n_tree, 0, 0.1)
-beta0_plot <- rnorm(n_plot, 0, 0.05)
-beta0 <- beta0_tree[tree_idx] + beta0_plot[plot_idx]
+mu_beta0   <- rnorm(1, 0, 0.025)
+beta0_tree <- c(0, rnorm(n_tree - 1, 0, 0.1))
+beta0_plot <- c(0, rnorm(n_plot - 1, 0, 0.05))
+beta0 <- mu_beta0 + beta0_tree[tree_idx] + beta0_plot[plot_idx]
 
+# design matrix representation
+beta_intercept <- c(mu_beta0, beta0_plot[-1], beta0_tree[-1])
+X_intercept <- model.matrix(~ factor(plot_idx) + factor(tree_idx))
+plot(X_intercept %*% beta_intercept, beta0)
 # plot the intercepts
 data.frame(
   beta0      = beta0,
@@ -72,31 +76,39 @@ beta <- rnorm(1)
 df <- 5
 
 ## a n by q matrix of coefficients for the basis expansion
+Z_plot <- rnorm(n_plot * n_per_tree)
+site_age_idx <- c(
+  rep(1:100, 10), rep(101:200, 10), rep(201:300, 10),
+  rep(301:400, 10), rep(401:500, 10), rep(501:600, 10),
+  rep(601:700, 10), rep(701:800, 10), rep(801:900, 10),
+  rep(901:1000, 10), rep(1001:1100, 10), rep(1101:1200, 10),
+  rep(1201:1300, 10), rep(1301:1400, 10), rep(1401:1500, 10),
+  rep(1501:1600, 10), rep(1601:1700, 10), rep(1701:1800, 10),
+  rep(1801:1900, 10), rep(1901:2000, 10)
+)
+
 Z <- cbind(
   # tree-specific predictor over age
   rep(seq(0, 1, length.out = n_per_tree), times = n_tree),
   # plot-level predictor (like climate normal)
   rep(rnorm(n_plot), each = n_per_tree * n_tree_per_plot),
   # plot-level predictor (like climate annual variation)
-  rep(rnorm(n_plot * n_per_tree), each = n_tree_per_plot)
+  Z_plot[site_age_idx]
 )
 
 ## build the univariate splines from a matrix of covariates
 X_bs  <- build_spline(Z, df)
+Xbs   <- cbind(X_bs[1, , ], X_bs[2, , ], X_bs[3, , ])
 
 sigma_beta_bs <- c(0.5, 0.01, 0.1)
 
 ## figure out how to do this more programmatically (loop/function)
 beta_bs <- matrix(0, 3, df)
-for (j in 1:3) {
-  beta_bs[j, 1] <- rnorm(1, 0, sigma_beta_bs[j])
-}
+beta_bs[, 1] <- rnorm(3, 0, sigma_beta_bs)
 
 ## Autoregressive prior on beta's to induce smoothing
 for (i in 2:df) {
-  for (j in 1:3) {
-    beta_bs[j, i] <- rnorm(1, beta_bs[, i-1], sigma_beta_bs[j])
-  }
+  beta_bs[, i] <- rnorm(3, beta_bs[, i-1], sigma_beta_bs)
 }
 
 ## plot the basis functions
@@ -120,7 +132,7 @@ data.frame(
   ggtitle("Simulated betas")
 
 
-# plot the marginal simulated spline effects
+# plot the simulated spline effects
 data.frame(
   effect = c(build_spline_effects(X_bs, beta_bs)),
   par        = factor(rep(1:3, each = n)),
@@ -130,25 +142,11 @@ data.frame(
   geom_line() +
   facet_wrap(~ par)
 
-## Build the spline interactions
-X_bs_int  <- build_spline_interactions(Z, df)
-## spline interaction smoothness penalty (2D)
-## this is set at phi = 0.99 for simulation, for fitting in stan, we set phi = 1
-Q <- make_Q(df, phi = 0.99, prec_model = "CAR")
-
-
-beta_bs_int <- matrix(0, nrow(X_bs_int), df^2)
-sigma_beta_bs_int <- c(0.05, 0.01, 0.025)
-for (j in 1:nrow(X_bs_int)) {
-  beta_bs_int[j, ] <- drop(rmvn(1, rep(0, df^2), sigma_beta_bs_int[j] * solve(Q)))
-}
-
-
 
 
 sigma <- 0.1
 ## the drop() makes y into a vector
-y <- drop(beta0 + as.matrix(X) %*% beta + rowSums(build_spline_effects(X_bs, beta_bs)) + rowSums(build_spline_effects(X_bs_int, beta_bs_int)) + rnorm(n, 0, sigma))
+y <- drop(beta0 + as.matrix(X) %*% beta + rowSums(build_spline_effects(X_bs, beta_bs)) + rnorm(n, 0, sigma))
 
 
 
@@ -196,140 +194,140 @@ p4 <- dat %>%
 
 (p1 + p2) / (p3 + p4)
 
-## Plot the marginal and interaction effects
-
-n_grid <- 40
-Z_grid <- expand.grid(
-  seq(min(Z[, 1]), max(Z[, 1]), length.out = n_grid),
-  seq(min(Z[, 2]), max(Z[, 2]), length.out = n_grid),
-  seq(min(Z[, 3]), max(Z[, 3]), length.out = n_grid)
-)
-Z_bs_grid <- build_spline(as.matrix(Z_grid), df)
-effects_grid <- build_spline_effects(Z_bs_grid, beta_bs)
-
-Z_bs_int_grid <- build_spline_interactions(as.matrix(Z_grid), df)
-effects_int_grid <- build_spline_effects(Z_bs_int_grid, beta_bs_int)
-
-dat_marginal <- data.frame(
-  x1 = Z_grid[, 1],
-  x2 = Z_grid[, 2],
-  x3 = Z_grid[, 3],
-  effects1 = effects_grid[, 1],
-  effects2 = effects_grid[, 2],
-  effects3 = effects_grid[, 3]
-  )
-
-p1 <- dat_marginal %>%
-  ggplot(aes(x = x1, y = effects1)) +
-  geom_line() +
-  ggtitle("marginal effect")
-p2 <- dat_marginal %>%
-  ggplot(aes(x = x2, y = effects2)) +
-  geom_line() +
-  ggtitle("marginal effect")
-p3 <- dat_marginal %>%
-  ggplot(aes(x = x3, y = effects3)) +
-  geom_line() +
-  ggtitle("marginal effect")
-
-dat_int <- data.frame(
-  x1 = Z_grid[, 1],
-  x2 = Z_grid[, 2],
-  x3 = Z_grid[, 3],
-  effects1 = effects_int_grid[, 1],
-  effects2 = effects_int_grid[, 2],
-  effects3 = effects_int_grid[, 3]
-)
-
-p4 <- dat_int %>%
-  ggplot(aes(x = x1, y = x2, fill = effects1)) +
-  geom_raster() +
-  scale_fill_viridis_c() +
-  ggtitle("interaction")
-p5 <- dat_int %>%
-  ggplot(aes(x = x1, y = x3, fill = effects2)) +
-  geom_raster() +
-  scale_fill_viridis_c() +
-  ggtitle("interaction")
-p6 <- dat_int %>%
-  ggplot(aes(x = x2, y = x3, fill = effects3)) +
-  geom_raster() +
-  scale_fill_viridis_c() +
-  ggtitle("interaction")
-
-dat_full <- data.frame(
-  x1 = Z_grid[, 1],
-  x2 = Z_grid[, 2],
-  x3 = Z_grid[, 3],
-  effects1 = effects_grid[, 1] + effects_grid[, 2] + effects_int_grid[, 1],
-  effects2 = effects_grid[, 1] + effects_grid[, 3] + effects_int_grid[, 2],
-  effects3 = effects_grid[, 2] + effects_grid[, 3] + effects_int_grid[, 3]
-)
-
-p7 <- dat_full %>%
-  ggplot(aes(x = x1, y = x2, fill = effects1)) +
-  geom_raster() +
-  scale_fill_viridis_c() +
-  ggtitle("full effect")
-p8 <- dat_full %>%
-  ggplot(aes(x = x1, y = x3, fill = effects2)) +
-  geom_raster() +
-  scale_fill_viridis_c() +
-  ggtitle("full effect")
-p9 <- dat_full %>%
-  ggplot(aes(x = x2, y = x3, fill = effects3)) +
-  geom_raster() +
-  scale_fill_viridis_c() +
-  ggtitle("full effect")
-
-(p1 + p2 + p3) / (p4 + p5 + p6) / (p7 + p8 + p9)
-
 ##----------------------------------------------------------------------------##
-## Fit the b-spline model with interactions in stan
+## Fit the b-spline model in stan
 ##----------------------------------------------------------------------------##
 
 ## for now, predict at the observed sites only
 X_pred <- X
 X_bs_pred <- X_bs
-X_bs_int_pred <- X_bs_int
 tree_idx_pred <- tree_idx
 
-## spline interaction smoothness penalty adjacency (2D)
-W <- make_W(df)
+params <- list(
+  n_mcmc    = 5000,
+  n_adapt   = 5000,
+  n_message = 50,
+  n_thin    = 10
+)
+
 
 ## Needs to fit with more samples
-if (file.exists(here("results", "spline-interaction-sparse-example.RDS"))) {
-  fit_grow <- readRDS(here("results", "spline-interaction-sparse-example.RDS"))
+if (file.exists(here("results", "spline-example-gibbs.RDS"))) {
+  fit_grow <- readRDS(here("results", "spline-example-gibbs.RDS"))
 } else {
-  fit_grow <- lm_splines_interaction_sparse(
-    y                = y,
-    X                = as.matrix(X),
-    X_bs             = X_bs,
-    X_bs_int         = X_bs_int,
-    W                = W,
-    n_plot           = n_plot,
-    n_tree           = n_tree,
-    plot_by_tree_idx = plot_by_tree_idx,
-    tree_idx         = tree_idx,
-    X_pred           = as.matrix(X_pred),
-    X_bs_pred        = X_bs_pred,
-    X_bs_int_pred    = X_bs_int_pred,
-    tree_idx_pred    = tree_idx_pred,
-    iter = 2000,
-    warmup = 1000,
-    chains = 4,
-    control = list(max_treedepth = 15, adapt_delta = 0.99)
-  )
+  fit_grow <- mcmc_splines(
+    y        = y,
+    X        = as.matrix(X),
+    Xbs      = Xbs,
+    plot_idx = plot_idx,
+    tree_idx = tree_idx,
+    params   = params,
+    verbose  = FALSE)
 
-  saveRDS(fit_grow, file = here("results" ,"spline-interaction-sparse-example.RDS"))
+  saveRDS(fit_grow, file = here("results" ,"spline-example-gibbs.RDS"))
 }
 
 
-pars <- rstan::extract(fit_grow)
+# check trace plots of log probability
+data.frame(
+  lp__        = c(fit_grow$lp__),
+  observation = rep(1:ncol(fit_grow$lp__), each = nrow(fit_grow$lp__)),
+  iteration   = rep(1:nrow(fit_grow$lp__), time = ncol(fit_grow$lp__))
+) %>%
+  sample_n_of(10, observation) %>%
+  ggplot(aes(x = iteration, y = lp__, group = observation, color = observation)) +
+  geom_line(alpha = 0.25) +
+  theme(legend.position = "none")
+
+# trace plots of intercepts
+data.frame(
+  beta_int    = c(fit_grow$beta_intercept),
+  parameter   = rep(1:ncol(fit_grow$beta_intercept), each = nrow(fit_grow$beta_intercept)),
+  iteration   = rep(1:nrow(fit_grow$beta_intercept), time = ncol(fit_grow$beta_intercept))
+) %>%
+  sample_n_of(10, parameter) %>%
+  ggplot(aes(x = iteration, y = beta_int, group = parameter, color = parameter)) +
+  geom_line(alpha = 0.25) +
+  theme(legend.position = "none")
+
+# trace plots of slopes
+data.frame(
+  beta        = c(fit_grow$beta),
+  parameter   = rep(1:ncol(fit_grow$beta), each = nrow(fit_grow$beta)),
+  iteration   = rep(1:nrow(fit_grow$beta), time = ncol(fit_grow$beta))
+) %>%
+  ggplot(aes(x = iteration, y = beta, group = parameter, color = parameter)) +
+  geom_line(alpha = 0.25) +
+  theme(legend.position = "none")
+
+# trace plots of spline parameters
+data.frame(
+  beta        = c(fit_grow$beta_bs),
+  parameter   = factor(rep(1:ncol(Z), each = nrow(fit_grow$beta) * df)),
+  knot        = factor(rep(1:df, each = nrow(fit_grow$beta))),
+  iteration   = rep(1:nrow(fit_grow$beta), time = ncol(fit_grow$beta))
+) %>%
+  ggplot(aes(x = iteration, y = beta, group = knot, color = knot)) +
+  geom_line(alpha = 0.25) +
+  facet_wrap(~ parameter) +
+  theme(legend.position = "none")
+
+# plot of intercept parameters
+data.frame(
+  intercept_fit = apply(fit_grow$beta_intercept, 2, mean),
+  intercept_truth = beta_intercept,
+  parameter = c("overall", rep("plot", n_plot - 1), rep("tree", n_tree - 1))
+) %>%
+  ggplot(aes(x = intercept_fit, y = intercept_truth, color = parameter)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, color = "red")
+
+layout(matrix(1:4, 2, 2))
+hist(sqrt(fit_grow$sigma2))
+abline(v = sigma, col = "red", lwd = 3)
+hist(fit_grow$s2_beta_p)
+abline(v = 0.05, col = "red", lwd = 3)
+hist(fit_grow$s2_beta_t)
+abline(v = 0.01, col = "red", lwd = 3)
+plot(apply(fit_grow$beta_bs, 2, mean), c(t(beta_bs)))
+abline(0, 1, col = "red")
+
+# pseudo-replication
+data.frame(
+  climate_normal = X,
+  plot           = plot_idx
+) %>%
+  ggplot(aes(x = plot_idx, y = climate_normal)) +
+  geom_point(position = "jitter")
 
 
-# check sampling diagnostics
-check_hmc_diagnostics(fit_grow)
+
+## Joint random effects and climate normal effects are identifiable
+##  suggest dropping plot level random effects if you want to interpret
+## the climate normals!
+data.frame(
+  estimated_intercept = c(apply(fit_grow$beta_intercept, 2, mean)[1] * rep(1, n_plot) +
+                            c(0, apply(fit_grow$beta_intercept, 2, mean)[2:n_plot])
+                            )[plot_idx] +
+    X * mean(fit_grow$beta) +
+    X_bs[2, , ] %*% apply(fit_grow$beta_bs, 2, mean)[df + 1:df],
+  sim_intercept = c(mu_beta0 * rep(1, n_plot) + beta0_plot)[plot_idx] +
+    X * beta + X_bs[2, , ] %*% beta_bs[2, ]) %>%
+  ggplot(aes(x = estimated_intercept, y = sim_intercept)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, color = "red")
+
+# co-linearity between plot-level intercepts and climate normals
+# shows up again
+# plot(
+#   apply(fit_grow$beta_intercept, 2, mean)[1:n_plot][plot_idx] + X_bs[2, , ] %*% apply(fit_grow$beta_bs, 2, mean)[df + 1:df],
+#   beta0_plot[plot_idx] + X_bs[2, , ] %*% beta_bs[2, ])
+# abline(0, 1, col = "red")
+
+
+
+
+
 
 # check trace plots
 p1 <- mcmc_trace(fit_grow, pars = "lp__")
@@ -344,9 +342,9 @@ mcmc_pairs(
   pars = c("lp__", "sigma_beta[1]", "sigma_beta[2]", "sigma_beta[3]")
 )
 
-if (!file.exists(here::here("images", "spline-interaction-sparse", "spline-trace-others.png"))) {
+if (!file.exists(here::here("images", "spline-gibbs", "spline-trace-others.png"))) {
   ggsave(
-    file = here::here("images", "spline-interaction-sparse", "spline-trace-others.png"),
+    file = here::here("images", "spline-gibbs", "spline-trace-others.png"),
     width = 16,
     height = 9,
     (p1 + p2 + p3) / p4
@@ -356,9 +354,9 @@ if (!file.exists(here::here("images", "spline-interaction-sparse", "spline-trace
 
 # check trace plots for tree level intercept
 for (j in 1:5) {
-  if (!file.exists(here::here("images", "spline-interaction-sparse", paste0("spline-trace-beta0_t-", j, ".png")))) {
+  if (!file.exists(here::here("images", "spline-gibbs", paste0("spline-trace-beta0_t-", j, ".png")))) {
     ggsave(
-      file = here::here("images", "spline-interaction-sparse", paste0("spline-trace-beta0_t-", j, ".png")),
+      file = here::here("images", "spline-gibbs", paste0("spline-trace-beta0_t-", j, ".png")),
       width = 16,
       height = 9,
       mcmc_trace(fit_grow,
@@ -370,9 +368,9 @@ for (j in 1:5) {
 }
 
 # check trace plots plot level intercepts
-if (!file.exists(here::here("images", "spline-interaction-sparse", "spline-trace-beta0_p.png"))) {
+if (!file.exists(here::here("images", "spline-gibbs", "spline-trace-beta0_p.png"))) {
   ggsave(
-    file = here::here("images", "spline-interaction-sparse", "spline-trace-beta0_p.png"),
+    file = here::here("images", "spline-gibbs", "spline-trace-beta0_p.png"),
     width = 16,
     height = 9,
     mcmc_trace(fit_grow,
@@ -384,7 +382,7 @@ if (!file.exists(here::here("images", "spline-interaction-sparse", "spline-trace
 
 
 # check trace plots plot level intercepts
-if (!file.exists(here::here("images", "spline-interaction-sparse", "spline-trace-betas.png"))) {
+if (!file.exists(here::here("images", "spline-gibbs", "spline-trace-betas.png"))) {
   p1 <- mcmc_trace(fit_grow, pars = "beta[1]") + #vars(param_range("beta", 1))) +
     theme_bw(base_size = 14)
   p2 <- mcmc_trace(fit_grow, pars = vars(param_glue("beta_bs[{level1},{level2}]",
@@ -393,7 +391,7 @@ if (!file.exists(here::here("images", "spline-interaction-sparse", "spline-trace
     theme_bw(base_size = 14)
 
   ggsave(
-    file = here::here("images", "spline-interaction-sparse", "spline-trace-betas.png"),
+    file = here::here("images", "spline-gibbs", "spline-trace-betas.png"),
     width = 16,
     height = 9,
     p1 / p2 + plot_layout(heights = c(1, 4))
@@ -543,9 +541,9 @@ dat_truth <- data.frame(
 )
 
 
-if (!file.exists(here::here("images", "spline-interaction-sparse", "spline-effects.png"))) {
+if (!file.exists(here::here("images", "spline-gibbs", "spline-effects.png"))) {
   ggsave(
-    file = here::here("images", "spline-interaction-sparse", "spline-effects.png"),
+    file = here::here("images", "spline-gibbs", "spline-effects.png"),
     width = 16,
     height = 9,
     dat_effects %>%

@@ -8,8 +8,8 @@ library(bayesplot)
 if (!require(devtools)) {
   install.packages("devtools")
 }
-if (!require(treeRingSplines)) {
-  devtools::install_github("jtipton25/treeRingSplines")
+if (!require(treeRingSplinesStan)) {
+  devtools::install_github("jtipton25/treeRingSplinesStan")
 }
 
 options(mc.cores = parallel::detectCores())
@@ -18,9 +18,21 @@ options(mc.cores = parallel::detectCores())
 
 if (!dir.exists(here::here("images")))
   dir.create(here::here("images"))
-if (!dir.exists(here::here("images", "linear")))
-  dir.create(here::here("images", "linear"))
+if (!dir.exists(here::here("images", "linear-gibbs")))
+  dir.create(here::here("images", "linear-gibbs"))
 
+sample_n_of <- function(data, size, ...) {
+  dots <- quos(...)
+
+  group_ids <- data %>%
+    group_by(!!! dots) %>%
+    group_indices()
+
+  sampled_groups <- sample(unique(group_ids), size)
+
+  data %>%
+    filter(group_ids %in% sampled_groups)
+}
 
 # linear model --------------------------------------------------------------
 
@@ -44,10 +56,15 @@ tree_idx <- rep(1:n_tree, each = n_per_tree)
 plot_by_tree_idx <- rep(1:n_plot, each = n_tree_per_plot)
 
 # intercept terms
-beta0_tree <- rnorm(n_tree, 0, 0.1)
-beta0_plot <- rnorm(n_plot, 0, 0.05)
-beta0 <- beta0_tree[tree_idx] + beta0_plot[plot_idx]
+mu_beta0   <- rnorm(1, 0, 0.025)
+beta0_tree <- c(0, rnorm(n_tree - 1, 0, 0.1))
+beta0_plot <- c(0, rnorm(n_plot - 1, 0, 0.05))
+beta0 <- mu_beta0 + beta0_tree[tree_idx] + beta0_plot[plot_idx]
 
+# design matrix representation
+beta_intercept <- c(mu_beta0, beta0_plot[-1], beta0_tree[-1])
+X_intercept <- model.matrix(~ factor(plot_idx) + factor(tree_idx))
+plot(X_intercept %*% beta_intercept, beta0)
 # plot the intercepts
 data.frame(
   beta0      = beta0,
@@ -86,9 +103,9 @@ beta <- rnorm(ncol(X))
 
 # plot the simulated spline effects
 data.frame(
-  effect = c(X %*% beta),
-  par        = factor(rep(1:3, each = n)),
-  X          = c(X)
+  effect = c(X[, 1] * beta[1], X[, 2] * beta[2], X[, 3] * beta[3]),
+  par    = factor(rep(1:3, each = n)),
+  X      = c(X)
 ) %>%
   ggplot(aes(x = X, y = effect, group = par)) +
   geom_line() +
@@ -136,49 +153,93 @@ p3 <- dat %>%
 p1 / (p2 + p3)
 
 ##----------------------------------------------------------------------------##
-## Fit the linear model in stan
+## Fit the linear model ----
 ##----------------------------------------------------------------------------##
 
 ## for now, predict at the observed sites only
 X_pred <- X
 tree_idx_pred <- tree_idx
 
-## Needs to fit with more samples
-if (file.exists(here("results", "linear-example.RDS"))) {
-  fit_grow <- readRDS(here("results", "linear-example.RDS"))
-} else {
-  fit_grow <- lm_linear(
-    y                = y,
-    X                = X,
-    n_plot           = n_plot,
-    n_tree           = n_tree,
-    plot_by_tree_idx = plot_by_tree_idx,
-    tree_idx         = tree_idx,
-    X_pred           = X_pred,
-    tree_idx_pred    = tree_idx_pred,
-    iter = 1000,
-    warmup = 500,
-    chains = 4,
-    control = list(max_treedepth = 15)
-  )
+params <- list(
+  n_mcmc    = 500,
+  n_adapt   = 500,
+  n_message = 50,
+  n_thin    = 1
+)
 
-  saveRDS(fit_grow, file = here("results" ,"linear-example.RDS"))
+## Needs to fit with more samples
+if (file.exists(here("results", "linear-gibbs-example.RDS"))) {
+  fit_grow <- readRDS(here("results", "linear-gibbs-example.RDS"))
+} else {
+  fit_grow <- mcmc_linear(
+    y        = y,
+    X_intercept
+    X        = X,
+    plot_idx = plot_idx,
+    tree_idx = tree_idx,
+    params   = params,
+    verbose  = FALSE)
+
+
+  saveRDS(fit_grow, file = here("results" ,"linear-gibbs-example.RDS"))
 }
 
-pars <- rstan::extract(fit_grow)
+# pars <- rstan::extract(fit_grow)
 
 
-# check sampling diagnostics
-check_hmc_diagnostics(fit_grow)
+# check trace plots of log probability
+data.frame(
+  lp__        = c(fit_grow$lp__),
+  observation = rep(1:ncol(fit_grow$lp__), each = nrow(fit_grow$lp__)),
+  iteration   = rep(1:nrow(fit_grow$lp__), time = ncol(fit_grow$lp__))
+) %>%
+  sample_n_of(10, observation) %>%
+  ggplot(aes(x = iteration, y = lp__, group = observation, color = observation)) +
+  geom_line(alpha = 0.25) +
+  theme(legend.position = "none")
 
-# check trace plots
+# trace plots of intercepts
+data.frame(
+  beta_int    = c(fit_grow$beta_intercept),
+  parameter   = rep(1:ncol(fit_grow$beta_intercept), each = nrow(fit_grow$beta_intercept)),
+  iteration   = rep(1:nrow(fit_grow$beta_intercept), time = ncol(fit_grow$beta_intercept))
+) %>%
+  sample_n_of(10, parameter) %>%
+  ggplot(aes(x = iteration, y = beta_int, group = parameter, color = parameter)) +
+  geom_line(alpha = 0.25) +
+  theme(legend.position = "none")
+
+# trace plots of slopes
+data.frame(
+  beta        = c(fit_grow$beta),
+  parameter   = rep(1:ncol(fit_grow$beta), each = nrow(fit_grow$beta)),
+  iteration   = rep(1:nrow(fit_grow$beta), time = ncol(fit_grow$beta))
+) %>%
+  ggplot(aes(x = iteration, y = beta, group = parameter, color = parameter)) +
+  geom_line(alpha = 0.25) +
+  theme(legend.position = "none")
+
+data.frame(
+  intercept_fit = apply(fit_grow$beta_intercept, 2, mean),
+  intercept_truth = beta_intercept,
+  parameter = c("overall", rep("plot", n_plot - 1), rep("tree", n_tree - 1))
+) %>%
+  ggplot(aes(x = intercept_fit, y = intercept_truth, color = parameter)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, color = "red") +
+  stat_smooth(method = "lm")
+
+
+
+
+
 p1 <- mcmc_trace(fit_grow, pars = "lp__")
 p2 <- mcmc_trace(fit_grow, pars = "mu_beta0")
 p3 <- mcmc_trace(fit_grow, regex_pars = "s_|sigma")
 p4 <- mcmc_trace(fit_grow, pars = vars(param_range("beta", 1:3)))
-if (!file.exists(here::here("images", "linear", "linear-trace-others.png"))) {
+if (!file.exists(here::here("images", "linear-gibbs", "linear-trace-others.png"))) {
   ggsave(
-    file = here::here("images", "linear", "linear-trace-others.png"),
+    file = here::here("images", "linear-gibbs", "linear-trace-others.png"),
     width = 16,
     height = 9,
     (p1 + p2) / p3 / p4
@@ -188,9 +249,9 @@ if (!file.exists(here::here("images", "linear", "linear-trace-others.png"))) {
 
 # check trace plots for tree level intercept
 for (j in 1:5) {
-  if (!file.exists(here::here("images", "linear", paste0("linear-trace-beta0_t-", j, ".png")))) {
+  if (!file.exists(here::here("images", "linear-gibbs", paste0("linear-trace-beta0_t-", j, ".png")))) {
     ggsave(
-      file = here::here("images", "linear", paste0("linear-trace-beta0_t-", j, ".png")),
+      file = here::here("images", "linear-gibbs", paste0("linear-trace-beta0_t-", j, ".png")),
       width = 16,
       height = 9,
       mcmc_trace(fit_grow,
@@ -202,9 +263,9 @@ for (j in 1:5) {
 }
 
 # check trace plots plot level intercepts
-if (!file.exists(here::here("images", "linear", "linear-trace-beta0_p.png"))) {
+if (!file.exists(here::here("images", "linear-gibbs", "linear-trace-beta0_p.png"))) {
   ggsave(
-    file = here::here("images", "linear", "linear-trace-beta0_p.png"),
+    file = here::here("images", "linear-gibbs", "linear-trace-beta0_p.png"),
     width = 16,
     height = 9,
     mcmc_trace(fit_grow,
@@ -215,9 +276,9 @@ if (!file.exists(here::here("images", "linear", "linear-trace-beta0_p.png"))) {
 }
 
 # check trace plots plot level intercepts
-if (!file.exists(here::here("images", "linear", "linear-trace-beta0_p.png"))) {
+if (!file.exists(here::here("images", "linear-gibbs", "linear-trace-beta0_p.png"))) {
   ggsave(
-    file = here::here("images", "linear", "linear-trace-beta0_p.png"),
+    file = here::here("images", "linear-gibbs", "linear-trace-beta0_p.png"),
     width = 16,
     height = 9,
     mcmc_trace(fit_grow,
@@ -277,7 +338,7 @@ as.data.frame.table(beta_post, responseName = "beta") %>%
       parameter = factor(1:3)
     )
   ) %>%
-  ggplot(aes(x = truth, y = estimate, color = parameter)) +
+  ggplot(aes(x = truth, y = estimate)) +
   geom_point(alpha = 0.75) +
   geom_errorbar(aes(ymin = lower_beta, ymax = upper_beta), alpha = 0.5, width = 0.0) +
   geom_abline(slope = 1, intercept = 0, color = "red") +
@@ -300,7 +361,7 @@ data.frame(
 ## Fitted vs. estimated functional responses
 
 
-if (!file.exists(here::here("images", "linear", "linear-effects.png"))) {
+if (!file.exists(here::here("images", "linear-gibbs", "linear-effects.png"))) {
 
   dat_X <- data.frame(
     X           = c(X),
@@ -348,7 +409,7 @@ if (!file.exists(here::here("images", "linear", "linear-effects.png"))) {
     ggtitle("estimate in grey, simulated trend in red")
 
   ggsave(
-    file = here::here("images", "linear", "linear-effects.png"),
+    file = here::here("images", "linear-gibbs", "linear-effects.png"),
     width = 16,
     height = 9,
     p1 + theme_bw(base_size = 14)
@@ -357,12 +418,12 @@ if (!file.exists(here::here("images", "linear", "linear-effects.png"))) {
 
 # Posterior predictive distributions
 
-if (!file.exists(here::here("images", "linear", "linear-ppc.png"))) {
+if (!file.exists(here::here("images", "linear-gibbs", "linear-ppc.png"))) {
   p1 <- ppc_dens_overlay(y, pars$y_rep)
   p2 <- ppc_ecdf_overlay(y, pars$y_rep[sample(nrow(pars$y_rep), 250), ])
 
   ggsave(
-    file = here::here("images", "linear", "linear-ppc.png"),
+    file = here::here("images", "linear-gibbs", "linear-ppc.png"),
     width = 16,
     height = 9,
     (p1 + theme_bw(base_size = 14)) / (p2 + theme_bw(base_size = 14))
@@ -371,7 +432,7 @@ if (!file.exists(here::here("images", "linear", "linear-ppc.png"))) {
 
 
 # explore posterior mean of residuals as a function of covariates
-if (!file.exists(here::here("images", "linear", "linear-ppc-by-covariate.png"))) {
+if (!file.exists(here::here("images", "linear-gibbs", "linear-ppc-by-covariate.png"))) {
   p1 <- ppc_error_scatter_avg_vs_x(y, pars$y_rep, X[, 1], alpha = 0.1) +
     geom_hline(yintercept = 0, color = "red", lty = 2) +
     theme_bw(base_size = 14)
@@ -383,7 +444,7 @@ if (!file.exists(here::here("images", "linear", "linear-ppc-by-covariate.png")))
     theme_bw(base_size = 14)
 
   ggsave(
-    file = here::here("images", "linear", "linear-ppc-by-covariate.png"),
+    file = here::here("images", "linear-gibbs", "linear-ppc-by-covariate.png"),
     width = 16,
     height = 9,
     p1 / p2 / p3
@@ -392,7 +453,8 @@ if (!file.exists(here::here("images", "linear", "linear-ppc-by-covariate.png")))
 
 
 ## LOO
-loo_linear <- loo(fit_grow, save_psis = TRUE, cores = 2)
+loo_linear <- loo(fit_grow$lp__, save_psis = TRUE, cores = 2)
+
 psis_linear <- loo_linear$psis_object
 lw <- weights(psis_linear)
 

@@ -1,4 +1,4 @@
 library(testthat)
-library(treeRingSplines)
+library(treeRingSplinesStan)
 
-test_check("treeRingSplines")
+test_check("treeRingSplinesStan")

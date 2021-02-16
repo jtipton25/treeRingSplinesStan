@@ -1,11 +1,11 @@
-#' The 'treeRingSplines' package.
+#' The 'treeRingSplinesStan' package.
 #'
 #' @description Fitting Tree Ring Growth Models With Splines.
 #'
 #' @docType package
-#' @name treeRingSplines-package
-#' @aliases treeRingSplines
-#' @useDynLib treeRingSplines, .registration = TRUE
+#' @name treeRingSplinesStan-package
+#' @aliases treeRingSplinesStan
+#' @useDynLib treeRingSplinesStan, .registration = TRUE
 #' @import methods
 #' @import Rcpp
 #' @importFrom rstan sampling
