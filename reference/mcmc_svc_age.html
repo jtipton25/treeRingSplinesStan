@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>lm_splines_interaction — lm_splines_interaction • treeRingSplinesStan</title>
+<title>Bayesian Spatially Varying Coefficients model — mcmc_svc_age • treeRingSplinesStan</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="lm_splines_interaction — lm_splines_interaction" />
-<meta property="og:description" content="lm_splines_interaction" />
+<meta property="og:title" content="Bayesian Spatially Varying Coefficients model — mcmc_svc_age" />
+<meta property="og:description" content="this function runs Markov Chain Monte Carlo to estimate the Bayesian spatially-varying coefficient model" />
 
 
 
@@ -108,30 +108,28 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>lm_splines_interaction</h1>
-    <small class="dont-index">Source: <a href='https://github.com/jtipton25/treeRingSplinesStan/blob/master/R/lm_splines_interaction.R'><code>R/lm_splines_interaction.R</code></a></small>
-    <div class="hidden name"><code>lm_splines_interaction.Rd</code></div>
+    <h1>Bayesian Spatially Varying Coefficients model</h1>
+    <small class="dont-index">Source: <a href='https://github.com/jtipton25/treeRingSplinesStan/blob/master/R/mcmc_svc_age.R'><code>R/mcmc_svc_age.R</code></a></small>
+    <div class="hidden name"><code>mcmc_svc_age.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>lm_splines_interaction</p>
+    <p>this function runs Markov Chain Monte Carlo to estimate the Bayesian spatially-varying coefficient model</p>
     </div>
 
-    <pre class="usage"><span class='fu'>lm_splines_interaction</span><span class='op'>(</span>
+    <pre class="usage"><span class='fu'>mcmc_svc_age</span><span class='op'>(</span>
   <span class='va'>y</span>,
   <span class='va'>X</span>,
-  <span class='va'>X_bs</span>,
-  <span class='va'>X_bs_int</span>,
-  <span class='va'>Q</span>,
-  <span class='va'>n_plot</span>,
-  <span class='va'>n_tree</span>,
-  <span class='va'>plot_by_tree_idx</span>,
-  <span class='va'>tree_idx</span>,
-  <span class='va'>X_pred</span>,
-  <span class='va'>X_bs_pred</span>,
-  <span class='va'>X_bs_int_pred</span>,
-  <span class='va'>tree_idx_pred</span>,
-  <span class='va'>...</span>
+  <span class='va'>age</span>,
+  <span class='va'>climate_normal</span>,
+  <span class='va'>params</span>,
+  df <span class='op'>=</span> <span class='fl'>6</span>,
+  priors <span class='op'>=</span> <span class='cn'>NULL</span>,
+  inits <span class='op'>=</span> <span class='cn'>NULL</span>,
+  config <span class='op'>=</span> <span class='cn'>NULL</span>,
+  verbose <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  use_spam <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  n_chain <span class='op'>=</span> <span class='fl'>1</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -139,65 +137,84 @@
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>y</th>
-      <td><p>A vector of length n of tree ring increments on a log scale</p></td>
+      <td><p>is a \(n\) vector of Gaussian data.</p></td>
     </tr>
     <tr>
       <th>X</th>
-      <td><p>A n times p matrix of covariate values</p></td>
+      <td><p>is a \(n \times p\) matrix of fixed effects (like latitude, elevation, etc)</p></td>
     </tr>
     <tr>
-      <th>X_bs</th>
-      <td><p>A p times n times df array of covariate values bspline basis function expansions</p></td>
+      <th>climate_normal</th>
+      <td><p>is a \(n \times 2\) matrix of observation locations.</p></td>
     </tr>
     <tr>
-      <th>X_bs_int</th>
-      <td><p>A p times n times df_int array of covariate values bspline basis function expansions</p></td>
+      <th>params</th>
+      <td><p>is a list of parameter settings. The list
+<code>params</code> must contain the following values:</p><ul>
+<li><p><code>n_adapt</code>: A positive integer number of adaptive MCMC iterations.</p></li>
+<li><p><code>n_mcmc</code>: A positive integer number of total MCMC iterations
+post adaptation.</p></li>
+<li><p><code>n_thin</code>: A positive integer number of MCMC iterations per saved
+sample.</p></li>
+<li><p><code>n_message</code>: A positive integer number of frequency of iterations
+to output a progress message. For example, <code>n_message = 50</code>
+outputs progress messages every 50 iterations.</p></li>
+</ul></td>
     </tr>
     <tr>
-      <th>Q</th>
-      <td><p>A df_int times df_int matrix of spline penalty parameters</p></td>
+      <th>df</th>
+      <td><p>The degrees of freedom parameter for the basis expansion</p></td>
     </tr>
     <tr>
-      <th>n_plot</th>
-      <td><p>An integer for the number of plots</p></td>
+      <th>priors</th>
+      <td><p>is the list of prior settings.</p></td>
     </tr>
     <tr>
-      <th>n_tree</th>
-      <td><p>An integer for the number of trees</p></td>
+      <th>inits</th>
+      <td><p>is the list of initial values if the user wishes to specify initial values. If these values are not specified, then the initial values will be randomly sampled from the prior.</p></td>
     </tr>
     <tr>
-      <th>plot_by_tree_idx</th>
-      <td><p>A vector of length n_tree that indicates which plot each tree was sampled from</p></td>
+      <th>config</th>
+      <td><p>is the list of configuration values if the user wishes to specify initial values. If these values are not specified, then default a configuration will be used.</p></td>
     </tr>
     <tr>
-      <th>tree_idx</th>
-      <td><p>A vector of length n indicating which tree the observation came from</p></td>
+      <th>verbose</th>
+      <td><p>Should verbose output be printed? Typically this is only useful for troubleshooting.</p></td>
     </tr>
     <tr>
-      <th>X_pred</th>
-      <td><p>A n_pred by p matrix of covariate values at which to generate predictions</p></td>
+      <th>use_spam</th>
+      <td><p>is a boolean flag to determine whether the output is a list of spam matrix objects (<code>use_spam = TRUE</code>) or a an \(n \times n\) sparse Matrix of class "dgCMatrix" <code>use_spam = FALSE</code> (see spam and Matrix packages for details).</p></td>
     </tr>
     <tr>
-      <th>X_bs_pred</th>
-      <td><p>A p times n_pred times df matrix of covariate values at which to generate predictions</p></td>
+      <th>n_chain</th>
+      <td><p>is the MCMC chain id. The default is 1.</p></td>
     </tr>
     <tr>
-      <th>X_bs_int_pred</th>
-      <td><p>A n_interaction times n_pred times df^2 matrix of covariate values at which to generate predictions</p></td>
+      <th>M</th>
+      <td><p>The number of resolutions.</p></td>
     </tr>
     <tr>
-      <th>tree_idx_pred</th>
-      <td><p>A vector of length n_pred indicating which tree the observation came from</p></td>
+      <th>n_neighbors</th>
+      <td><p>The expected number of neighbors for each interior basis function. This determines the basis radius parameter.</p></td>
     </tr>
     <tr>
-      <th>...</th>
-      <td><p>Additional argument to <code><a href='https://mc-stan.org/rstan/reference/stanmodel-method-sampling.html'>rstan::sampling()</a></code></p></td>
+      <th>n_coarse_grid</th>
+      <td><p>The number of basis functions in one direction (e.g. <code>n_coarse_grid = 10</code> results in a \(10 \times 10\) course grid which is further extended by the number of additional padding basis functions given by <code>n_padding</code>.</p></td>
+    </tr>
+    <tr>
+      <th>n_padding</th>
+      <td><p>The number of additional boundary points to add on each boundary. For example, n_padding = 5 will add 5 boundary knots to the both the left  and right side of the grid).</p></td>
+    </tr>
+    <tr>
+      <th>joint</th>
+      <td><p>Should the spatial parameters alpha be sampled jointly or by each resolution</p></td>
+    </tr>
+    <tr>
+      <th>constraint</th>
+      <td><p>What constraint should be applied to the spatial process? Options include no constraint (<code>constraint = "unconstrained"</code>), a constraint so the entire MRA process sums to 0 (<code>constraint = "overall"</code>), a constraint so that each of the M levels of the MRA process sum to 0 (<code>constraint = "resolution"</code>), or whether the predicted process must sum to 0 (<code>constraint = "predicted"</code>). Note: <code>constraint = "predicted"</code> is NOT currently supported.</p></td>
     </tr>
     </table>
 
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
-
-    <p>A stan object that is the result of fitting the spline interaction regression model</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Check if a numeric vector of length n — is_numeric_vector • treeRingSplinesStan</title>
+<title>lm_linear_no_p — lm_linear_no_p • treeRingSplinesStan</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Check if a numeric vector of length n — is_numeric_vector" />
-<meta property="og:description" content="this function checks if the input is a numeric (double) vector" />
+<meta property="og:title" content="lm_linear_no_p — lm_linear_no_p" />
+<meta property="og:description" content="lm_linear_no_p" />
 
 
 
@@ -108,30 +108,53 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Check if a numeric vector of length n</h1>
-    <small class="dont-index">Source: <a href='https://github.com/jtipton25/treeRingSplinesStan/blob/master/R/predicates.R'><code>R/predicates.R</code></a></small>
-    <div class="hidden name"><code>is_numeric_vector.Rd</code></div>
+    <h1>lm_linear_no_p</h1>
+    <small class="dont-index">Source: <a href='https://github.com/jtipton25/treeRingSplinesStan/blob/master/R/lm_linear_no_p.R'><code>R/lm_linear_no_p.R</code></a></small>
+    <div class="hidden name"><code>lm_linear_no_p.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>this function checks if the input is a numeric (double) vector</p>
+    <p>lm_linear_no_p</p>
     </div>
 
-    <pre class="usage"><span class='fu'>is_numeric_vector</span><span class='op'>(</span><span class='va'>x</span>, <span class='va'>n</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>lm_linear_no_p</span><span class='op'>(</span><span class='va'>y</span>, <span class='va'>X</span>, <span class='va'>n_tree</span>, <span class='va'>tree_idx</span>, <span class='va'>X_pred</span>, <span class='va'>tree_idx_pred</span>, <span class='va'>...</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>x</th>
-      <td><p>is the input</p></td>
+      <th>y</th>
+      <td><p>A vector of length n of tree ring increments on a log scale</p></td>
     </tr>
     <tr>
-      <th>n</th>
-      <td><p>is the input vector length</p></td>
+      <th>X</th>
+      <td><p>A n times p matrix of covariate values</p></td>
+    </tr>
+    <tr>
+      <th>n_tree</th>
+      <td><p>An integer for the number of trees</p></td>
+    </tr>
+    <tr>
+      <th>tree_idx</th>
+      <td><p>A vector of length n indicating which tree the observation came from</p></td>
+    </tr>
+    <tr>
+      <th>X_pred</th>
+      <td><p>A n_pred by p matrix of covariate values at which to generate predictions</p></td>
+    </tr>
+    <tr>
+      <th>tree_idx_pred</th>
+      <td><p>A vector of length n_pred indicating which tree the observation came from</p></td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td><p>Additional arguments to <code><a href='https://mc-stan.org/rstan/reference/stanmodel-method-sampling.html'>rstan::sampling()</a></code></p></td>
     </tr>
     </table>
 
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+
+    <p>A stan object that is the result of fitting the linear regression model</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
