@@ -12,14 +12,18 @@ LazyData: true
 Roxygen: list(markdown = TRUE)    
 RoxygenNote: 7.1.1
 Imports: 
+    BayesMRA,
+    fields,
     igraph,
     Matrix,
+    mvnfast,
     methods,
     Rcpp (>= 0.12.0),
     RcppParallel (>= 5.0.1),
     rstan (>= 2.18.1),
     rstantools (>= 2.1.1),
     spam,
+    spam64,
     splines
 Suggests: 
     covr,
