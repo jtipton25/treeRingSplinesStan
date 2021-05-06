@@ -2,7 +2,7 @@ Package: treeRingSplinesStan
 Type: Package
 Title: Fitting Tree Ring Growth Models With Splines
 Version: 1.0.0
-Date: 2020-12-20
+Date: 2021-02-16
 Authors@R: person("John", "Tipton", email = "jrtipton@uark.edu", 
     role = c("aut", "cre"))
 Description: Fitting Tree Ring Growth Models With Splines.
